@@ -18,6 +18,7 @@ Supabase Postgres schema for Easy Logi. Only the `schema-migrator` subagent edit
 | `20261011090005_events_agents.sql` | events + pgmq queue, order_status_changes audit, agent_runs |
 | `20261011090006_rls_policies.sql` | Row-level security on every table |
 | `20261011090007_pgmq_public_api.sql` | `public.queue_send/read/delete/archive` SECURITY DEFINER pgmq wrappers for `.rpc()`, service_role only |
+| `20261011090008_order_status_guard.sql` | `orders.status` guard trigger + `public.change_order_status()` RPC (SECURITY INVOKER) that updates the order and writes the `order_status_changes` audit row |
 
 ## Running locally
 

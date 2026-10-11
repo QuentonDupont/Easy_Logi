@@ -174,6 +174,16 @@ export interface Database {
       };
       queue_delete: { Args: { queue_name: string; msg_id: number }; Returns: boolean };
       queue_archive: { Args: { queue_name: string; msg_id: number }; Returns: boolean };
+      // The only path allowed to change orders.status (migration 20261011090008).
+      change_order_status: {
+        Args: {
+          p_order_id: string;
+          p_to: OrderStatusEnum;
+          p_role: UserRoleEnum;
+          p_note: string | null;
+        };
+        Returns: undefined;
+      };
     };
     Enums: {
       order_status: OrderStatusEnum;
