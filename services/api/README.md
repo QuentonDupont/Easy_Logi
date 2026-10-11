@@ -29,6 +29,23 @@ Pieces:
 The decision logic (idempotency, dispatch, poison-message handling) is the pure, unit-tested core in
 `services/workflows/src/worker.ts`; the files here are thin Supabase adapters.
 
+## Running the worker
+
+```bash
+pnpm worker            # root; or: pnpm --filter @easy-logi/api worker
+```
+
+`src/main.ts` runs `runWorkerLoop` (drains every `WORKER_INTERVAL_MS`, default 2000ms) until
+`SIGINT`/`SIGTERM`, isolating per-tick failures. Deployment options (all read
+`SUPABASE_SERVICE_ROLE_KEY` from the env — no new credentials):
+
+- **Always-on process / container** — run `pnpm worker`.
+- **`pg_cron` + Edge Function** — schedule a function that calls `runWorkerOnce()` for a single
+  drain per firing (good when you don't want a long-running process).
+
+`runWorkerLoop` takes injectable `tick`/`sleep` so the loop is unit-tested
+(`src/runWorkerLoop.test.ts`) without a live Supabase.
+
 > **Not yet run** in this environment (no live Supabase). Apply the migrations, then wire
 > `runWorkerOnce` to an Edge Function or cron entrypoint. The adapters cast the `queue_*` RPCs until
 > `database.types.ts` is regenerated from the applied schema.

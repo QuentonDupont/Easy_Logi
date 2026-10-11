@@ -13,6 +13,7 @@
     "typecheck": "pnpm -r --if-present typecheck",
     "test": "vitest run",
     "test:watch": "vitest",
+    "worker": "pnpm --filter @easy-logi/api worker",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "eval": "tsx scripts/eval.ts"
