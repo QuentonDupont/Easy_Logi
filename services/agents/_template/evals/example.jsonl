@@ -1,0 +1,2 @@
+{"id":"case-001","input":{},"expect":{"result":"<expected>"},"note":"happy path"}
+{"id":"case-002","input":{},"expect":{"confidence_below":0.7},"note":"ambiguous input should be low confidence"}
