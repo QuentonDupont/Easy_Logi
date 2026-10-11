@@ -104,24 +104,19 @@ export async function changeStatus(_prev: ActionState, formData: FormData): Prom
     throw err;
   }
 
-  const { error: updateError } = await supabase
-    .from("orders")
-    .update({ status: to })
-    .eq("id", orderId);
-  if (updateError) {
-    return { ok: false, error: updateError.message };
-  }
-
-  await supabase.from("order_status_changes").insert({
-    org_id: order.org_id,
-    order_id: orderId,
-    from_status: from,
-    to_status: to,
-    // Record the actor's actual application role (the status-machine `role` is derived from it).
-    role: profile.role,
-    actor_user_id: profile.id,
-    note: note ?? null,
+  // The DB enforces that orders.status only changes through this one audited function
+  // (migration 20261011090008). It performs the update AND writes the order_status_changes
+  // row atomically; the actor's application role (profile.role) is recorded, since the
+  // status-machine `role` is derived from it.
+  const { error: rpcError } = await supabase.rpc("change_order_status", {
+    p_order_id: orderId,
+    p_to: to,
+    p_role: profile.role,
+    p_note: note ?? null,
   });
+  if (rpcError) {
+    return { ok: false, error: rpcError.message };
+  }
 
   await supabase.from("events").insert({
     org_id: order.org_id,
