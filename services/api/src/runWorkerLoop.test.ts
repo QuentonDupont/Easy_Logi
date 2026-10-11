@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { runWorkerLoop } from "./runWorkerLoop";
+import { runWorkerLoop, defaultSleep } from "./runWorkerLoop";
 
 const noSleep = () => Promise.resolve();
 
@@ -63,5 +63,30 @@ describe("runWorkerLoop", () => {
     await runWorkerLoop({ tick: async () => ["r"], sleep: noSleep, maxTicks: 2, onTick });
     expect(onTick).toHaveBeenNthCalledWith(1, ["r"], 1);
     expect(onTick).toHaveBeenNthCalledWith(2, ["r"], 2);
+  });
+});
+
+describe("defaultSleep", () => {
+  it("resolves after the timer", async () => {
+    const start = Date.now();
+    await defaultSleep(10);
+    expect(Date.now() - start).toBeGreaterThanOrEqual(5);
+  });
+
+  it("resolves immediately when the signal is already aborted", async () => {
+    const controller = new AbortController();
+    controller.abort();
+    const start = Date.now();
+    await defaultSleep(10_000, controller.signal);
+    expect(Date.now() - start).toBeLessThan(500); // did not wait the full 10s
+  });
+
+  it("resolves early when aborted mid-wait", async () => {
+    const controller = new AbortController();
+    const start = Date.now();
+    const p = defaultSleep(10_000, controller.signal);
+    controller.abort();
+    await p;
+    expect(Date.now() - start).toBeLessThan(500);
   });
 });

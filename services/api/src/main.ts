@@ -6,7 +6,10 @@
  */
 import { runWorkerLoop } from "./runWorkerLoop";
 
-const intervalMs = Number(process.env.WORKER_INTERVAL_MS ?? 2_000);
+// Guard against a non-numeric / zero env value, which would otherwise turn the loop into a
+// ~0ms hot drain.
+const parsedInterval = Number(process.env.WORKER_INTERVAL_MS);
+const intervalMs = Number.isFinite(parsedInterval) && parsedInterval > 0 ? parsedInterval : 2_000;
 
 async function main(): Promise<void> {
   const controller = new AbortController();
