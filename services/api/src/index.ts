@@ -3,3 +3,4 @@ export { createSupabaseQueueConsumer } from "./queueConsumer";
 export { createSupabaseEventRepo } from "./eventRepo";
 export { createAgentRunner, type RegisteredAgent } from "./agentRunner";
 export { runWorkerOnce, type RunWorkerOptions } from "./worker";
+export { runWorkerLoop, defaultSleep, type WorkerLoopOptions } from "./runWorkerLoop";
