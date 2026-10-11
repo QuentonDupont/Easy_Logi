@@ -166,6 +166,14 @@ export interface Database {
     Functions: {
       auth_org_id: { Args: Record<string, never>; Returns: string };
       is_ops_admin: { Args: Record<string, never>; Returns: boolean };
+      // pgmq public wrappers (migration 20261011090007); callable only by service_role.
+      queue_send: { Args: { queue_name: string; msg: Record<string, unknown> }; Returns: number };
+      queue_read: {
+        Args: { queue_name: string; vt: number; qty: number };
+        Returns: { msg_id: number; read_ct: number; message: Record<string, unknown> }[];
+      };
+      queue_delete: { Args: { queue_name: string; msg_id: number }; Returns: boolean };
+      queue_archive: { Args: { queue_name: string; msg_id: number }; Returns: boolean };
     };
     Enums: {
       order_status: OrderStatusEnum;

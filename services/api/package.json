@@ -1,0 +1,22 @@
+{
+  "name": "@easy-logi/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@easy-logi/shared": "workspace:*",
+    "@easy-logi/workflows": "workspace:*",
+    "@supabase/supabase-js": "^2.117.3"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2"
+  }
+}
