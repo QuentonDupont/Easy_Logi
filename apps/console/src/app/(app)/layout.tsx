@@ -34,12 +34,22 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     <div className="min-h-screen">
       <header className="border-b">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
-          <div className="flex items-center gap-2">
-            <Package className="h-5 w-5 text-primary" />
-            <Link href="/orders" className="font-semibold">
-              Easy Logi
-            </Link>
-            {isOps && <Badge variant="secondary">Ops</Badge>}
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <Package className="h-5 w-5 text-primary" />
+              <Link href="/orders" className="font-semibold">
+                Easy Logi
+              </Link>
+              {isOps && <Badge variant="secondary">Ops</Badge>}
+            </div>
+            <nav className="flex items-center gap-3 text-sm">
+              <Link href="/orders" className="text-muted-foreground hover:text-foreground">
+                Orders
+              </Link>
+              <Link href="/fitment" className="text-muted-foreground hover:text-foreground">
+                Fitment
+              </Link>
+            </nav>
           </div>
           <div className="flex items-center gap-4">
             {isOps && orgs.length > 0 && <OrgSwitcher orgs={orgs} activeOrgId={activeOrgId} />}

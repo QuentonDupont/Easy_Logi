@@ -9,6 +9,9 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.133.0",
+    "@easy-logi/agent-runtime": "workspace:*",
+    "@easy-logi/agents": "workspace:*",
     "@easy-logi/shared": "workspace:*",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.117.3",
@@ -18,7 +21,8 @@
     "next": "15.1.3",
     "react": "19.0.0",
     "react-dom": "19.0.0",
-    "tailwind-merge": "^2.6.0"
+    "tailwind-merge": "^2.6.0",
+    "zod": "^3.24.1"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",

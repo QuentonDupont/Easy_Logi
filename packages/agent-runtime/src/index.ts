@@ -3,6 +3,7 @@ export * from "./models";
 export { extractJson } from "./json";
 export { runAgent } from "./runAgent";
 export { createAnthropicModelClient } from "./anthropicClient";
+export { createOfflineModelClient } from "./offlineClient";
 export {
   runEvalSet,
   evaluateExpectation,

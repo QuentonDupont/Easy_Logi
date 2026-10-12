@@ -26,6 +26,12 @@
       ],
       "@easy-logi/shared/*": [
         "../../packages/shared/src/*"
+      ],
+      "@easy-logi/agent-runtime": [
+        "../../packages/agent-runtime/src/index.ts"
+      ],
+      "@easy-logi/agents": [
+        "../../services/agents/index.ts"
       ]
     },
     "allowJs": true

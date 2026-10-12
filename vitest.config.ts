@@ -22,6 +22,11 @@ export default defineConfig({
         .pathname,
       "@easy-logi/costing": new URL("./packages/costing/src/index.ts", import.meta.url)
         .pathname,
+      "@easy-logi/agent-runtime": new URL(
+        "./packages/agent-runtime/src/index.ts",
+        import.meta.url,
+      ).pathname,
+      "@easy-logi/agents": new URL("./services/agents/index.ts", import.meta.url).pathname,
     },
   },
 });

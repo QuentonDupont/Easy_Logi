@@ -41,6 +41,15 @@ importers:
 
   apps/console:
     dependencies:
+      '@anthropic-ai/sdk':
+        specifier: ^0.133.0
+        version: 0.133.0(zod@3.25.76)
+      '@easy-logi/agent-runtime':
+        specifier: workspace:*
+        version: link:../../packages/agent-runtime
+      '@easy-logi/agents':
+        specifier: workspace:*
+        version: link:../../services/agents
       '@easy-logi/shared':
         specifier: workspace:*
         version: link:../../packages/shared
@@ -71,6 +80,9 @@ importers:
       tailwind-merge:
         specifier: ^2.6.0
         version: 2.6.1
+      zod:
+        specifier: ^3.24.1
+        version: 3.25.76
     devDependencies:
       '@types/node':
         specifier: ^22.10.2
@@ -122,6 +134,22 @@ importers:
 
   packages/shared:
     dependencies:
+      zod:
+        specifier: ^3.24.1
+        version: 3.25.76
+    devDependencies:
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+
+  services/agents:
+    dependencies:
+      '@easy-logi/agent-runtime':
+        specifier: workspace:*
+        version: link:../../packages/agent-runtime
+      '@easy-logi/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
       zod:
         specifier: ^3.24.1
         version: 3.25.76
