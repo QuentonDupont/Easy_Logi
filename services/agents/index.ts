@@ -31,13 +31,22 @@ export {
   type Output as Clarification,
 } from "./clarifier/schema";
 
+export { config as partLabelReaderConfig } from "./part-label-reader/config";
+export { systemPrompt as partLabelReaderPrompt } from "./part-label-reader/prompt";
+export {
+  Output as partLabelReaderSchema,
+  type Output as PartLabelReading,
+} from "./part-label-reader/schema";
+
 import { config as partIntentConfig } from "./part-intent-extractor/config";
 import { config as fitmentRankerConfig } from "./fitment-ranker/config";
 import { config as clarifierConfig } from "./clarifier/config";
+import { config as partLabelReaderConfig } from "./part-label-reader/config";
 
 /** All live Phase-1 agent configs, keyed by name. */
 export const AGENT_CONFIGS: Record<string, AgentConfig> = {
   "part-intent-extractor": partIntentConfig,
   "fitment-ranker": fitmentRankerConfig,
   clarifier: clarifierConfig,
+  "part-label-reader": partLabelReaderConfig,
 };

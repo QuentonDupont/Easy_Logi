@@ -11,22 +11,46 @@ import {
   mockFitmentData,
   recordAgentRuns,
 } from "@/lib/mock/backend";
-import { runFitmentPipeline } from "@/lib/fitment/pipeline";
+import { runFitmentPipeline, runFitmentFromPhoto } from "@/lib/fitment/pipeline";
+import type { ImageInput } from "@easy-logi/agent-runtime";
 import type { AgentRunSummary, FitmentResult } from "@/lib/fitment/types";
 
 export interface FindState {
   result: FitmentResult | null;
   error?: string;
+  /** When this state was produced, so the UI can show whichever of text/photo ran last. */
+  ts?: number;
 }
 
 /** Run the fitment pipeline on a buyer's free-text request and return the result for display. */
 export async function findParts(_prev: FindState, formData: FormData): Promise<FindState> {
   const request = ((formData.get("request") as string | null) ?? "").trim();
-  if (!request) return { result: null, error: "Describe the part you need." };
-  if (request.length > 500) return { result: null, error: "Please keep the request under 500 characters." };
+  if (!request) return { result: null, error: "Describe the part you need.", ts: Date.now() };
+  if (request.length > 500)
+    return { result: null, error: "Please keep the request under 500 characters.", ts: Date.now() };
 
   const result = await runFitmentPipeline({ requestText: request, data: mockFitmentData() });
-  return { result };
+  return { result, ts: Date.now() };
+}
+
+/** Read a part photo (or a sample label) and run the fitment pipeline from what it reads. */
+export async function readPhoto(_prev: FindState, formData: FormData): Promise<FindState> {
+  const sampleId = ((formData.get("sampleId") as string | null) ?? "").trim() || null;
+  const file = formData.get("photo");
+  let image: ImageInput | null = null;
+  if (file instanceof File && file.size > 0) {
+    if (!file.type.startsWith("image/"))
+      return { result: null, error: "That file is not an image.", ts: Date.now() };
+    if (file.size > 5_000_000)
+      return { result: null, error: "Image too large (max 5MB).", ts: Date.now() };
+    const bytes = Buffer.from(await file.arrayBuffer());
+    image = { mediaType: file.type, dataBase64: bytes.toString("base64") };
+  }
+  if (!image && !sampleId)
+    return { result: null, error: "Upload a photo or pick a sample label.", ts: Date.now() };
+
+  const result = await runFitmentFromPhoto({ image, sampleId, data: mockFitmentData() });
+  return { result, ts: Date.now() };
 }
 
 function generateReference(): string {

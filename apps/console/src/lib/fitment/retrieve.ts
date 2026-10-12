@@ -111,3 +111,34 @@ export function retrieveCandidates(intent: PartIntent, data: FitmentData): Candi
   candidates.sort((a, b) => b.priorScore - a.priorScore);
   return candidates.slice(0, 8);
 }
+
+function normalizePartNumber(s: string): string {
+  return s.replace(/[^a-z0-9]/gi, "").toUpperCase();
+}
+
+/**
+ * Deterministic lookup of catalogue parts by part number(s) read off a label — plain code.
+ * Matches on the normalized number (dashes/spaces removed), exact or either-contains, so a
+ * slightly mis-spaced reading still finds the part. Never returns a number not in the catalogue.
+ */
+export function matchByNumber(numbers: string[], data: FitmentData): Candidate[] {
+  const wanted = numbers.map(normalizePartNumber).filter((n) => n.length >= 4);
+  if (wanted.length === 0) return [];
+  const out: Candidate[] = [];
+  for (const part of data.parts) {
+    const pn = normalizePartNumber(part.part_number);
+    const hit = wanted.some((w) => w === pn || (w.length >= 5 && (pn.includes(w) || w.includes(pn))));
+    if (hit) {
+      out.push({
+        partId: part.id,
+        partNumber: part.part_number,
+        brand: part.brand,
+        category: part.category,
+        description: part.description,
+        priorScore: 0.95,
+        vehicleLabel: null,
+      });
+    }
+  }
+  return out;
+}

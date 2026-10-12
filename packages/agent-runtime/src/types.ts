@@ -25,6 +25,14 @@ export interface AgentConfig {
   latencyTargetMs: number;
 }
 
+/** An image attached to a completion request (for vision agents). Base64, no data: prefix. */
+export interface ImageInput {
+  /** e.g. "image/jpeg", "image/png", "image/webp". */
+  mediaType: string;
+  /** Base64-encoded image bytes, with no newlines and no data: URL prefix. */
+  dataBase64: string;
+}
+
 /** A single model completion request. Static instructions are cached; input is untrusted data. */
 export interface CompletionRequest {
   model: string;
@@ -32,6 +40,8 @@ export interface CompletionRequest {
   system: string;
   /** The input payload as a JSON string. Treated as data, never instructions. */
   userJson: string;
+  /** Images to show the model (vision agents only); untrusted data, same as text input. */
+  images?: ImageInput[];
   maxTokens: number;
   timeoutMs: number;
   modelTier: ModelTier;
@@ -82,6 +92,8 @@ export interface RunAgentParams<T> {
   outputSchema: z.ZodType<T>;
   /** The retrieved context / event payload to classify, extract from, or rank. */
   input: unknown;
+  /** Images to show the model (vision agents only). */
+  images?: ImageInput[];
   client: ModelClient;
   /** Injectable clock for latency measurement (tests pass a deterministic one). */
   now?: () => number;

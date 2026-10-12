@@ -14,6 +14,7 @@ export const EVENT_NAMES = [
   "message.received",
   "request.created",
   "request.photo_added",
+  "request.label_read",
   "request.intent_extracted",
   "candidates.retrieved",
   "fitment.ranked",

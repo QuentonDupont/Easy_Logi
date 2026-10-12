@@ -6,10 +6,12 @@ import {
   partIntentPrompt,
   fitmentRankerPrompt,
   clarifierPrompt,
+  partLabelReaderPrompt,
   AGENT_CONFIGS,
   partIntentSchema,
   fitmentRankerSchema,
   clarifierSchema,
+  partLabelReaderSchema,
 } from "./index";
 
 function readMd(relative: string): string {
@@ -21,6 +23,7 @@ describe("agent prompt.ts mirrors prompt.md (no drift)", () => {
     ["part-intent-extractor", partIntentPrompt, "./part-intent-extractor/prompt.md"],
     ["fitment-ranker", fitmentRankerPrompt, "./fitment-ranker/prompt.md"],
     ["clarifier", clarifierPrompt, "./clarifier/prompt.md"],
+    ["part-label-reader", partLabelReaderPrompt, "./part-label-reader/prompt.md"],
   ];
   for (const [name, systemPrompt, mdPath] of cases) {
     it(`${name}: prompt.ts === prompt.md`, () => {
@@ -77,6 +80,18 @@ describe("agent schemas validate a well-formed output", () => {
         ],
         confidence: 0.8,
         reason: "Two generations match.",
+      }).success,
+    ).toBe(true);
+  });
+
+  it("part-label-reader", () => {
+    expect(
+      partLabelReaderSchema.safeParse({
+        brand: "Toyota",
+        numbers: ["90915-YZZE1"],
+        text: "Oil filter",
+        confidence: 0.82,
+        reason: "Clear label on the box.",
       }).success,
     ).toBe(true);
   });

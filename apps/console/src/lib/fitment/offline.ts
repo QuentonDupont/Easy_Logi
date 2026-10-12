@@ -1,4 +1,4 @@
-import type { PartIntent, FitmentRanking, Clarification } from "@easy-logi/agents";
+import type { PartIntent, FitmentRanking, Clarification, PartLabelReading } from "@easy-logi/agents";
 
 /**
  * Deterministic offline responders — the local stand-in the offline ModelClient calls when there
@@ -222,4 +222,42 @@ export function offlineClarifier(input: unknown): Clarification {
 
   const reason = (asString(rec.reason) || "The request needs one more detail to search confidently.").slice(0, 280);
   return { question: question.slice(0, 280), options, confidence: 0.8, reason };
+}
+
+/**
+ * Sample part labels for the keyless photo demo. Each maps to a real catalogue part number, so
+ * the offline reader can "read" a known label without a vision model. With ANTHROPIC_API_KEY set,
+ * a real uploaded photo is read by Sonnet instead and these are not used.
+ */
+export const LABEL_SAMPLES: Array<{
+  id: string;
+  label: string;
+  brand: string;
+  numbers: string[];
+  text: string;
+}> = [
+  { id: "toyota-oil", label: "Toyota oil filter box", brand: "Toyota", numbers: ["90915-YZZE1"], text: "Oil filter" },
+  { id: "ford-air", label: "Ford air filter label", brand: "Ford", numbers: ["AB39-9601-AA"], text: "Air filter (Ranger)" },
+  { id: "vw-clutch", label: "VW clutch kit box", brand: "Volkswagen", numbers: ["03G141015X"], text: "Clutch kit" },
+];
+
+export function offlineLabelRead(input: unknown): PartLabelReading {
+  const sampleId = asString(asRecord(input).sampleId);
+  const sample = LABEL_SAMPLES.find((s) => s.id === sampleId);
+  if (sample) {
+    return {
+      brand: sample.brand,
+      numbers: sample.numbers,
+      text: sample.text,
+      confidence: 0.9,
+      reason: `Read ${sample.brand} ${sample.numbers[0] ?? ""} off the label.`.slice(0, 280),
+    };
+  }
+  return {
+    brand: null,
+    numbers: [],
+    text: "",
+    confidence: 0.2,
+    reason: "Offline model can't read an uploaded image — set ANTHROPIC_API_KEY, or pick a sample label.",
+  };
 }

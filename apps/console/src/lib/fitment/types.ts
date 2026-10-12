@@ -1,4 +1,4 @@
-import type { PartIntent, Clarification } from "@easy-logi/agents";
+import type { PartIntent, Clarification, PartLabelReading } from "@easy-logi/agents";
 
 /** A part retrieved by the deterministic retrieval step as a possible fit. */
 export interface Candidate {
@@ -33,6 +33,8 @@ export interface AgentRunSummary {
 export interface FitmentResult {
   requestText: string;
   intent: PartIntent | null;
+  /** Present when the request came from a photo (part-label-reader output). */
+  labelRead: PartLabelReading | null;
   candidates: RankedCandidate[];
   clarification: Clarification | null;
   runs: AgentRunSummary[];
