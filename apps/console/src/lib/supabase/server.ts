@@ -3,7 +3,8 @@ import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import type { Database } from "@easy-logi/shared";
 
 type CookieToSet = { name: string; value: string; options?: CookieOptions };
-import { requirePublicEnv } from "@/env";
+import { isMockMode, requirePublicEnv } from "@/env";
+import { createMockClient, MOCK_SESSION_COOKIE } from "@/lib/mock/backend";
 
 /**
  * Supabase client for server components, route handlers and server actions. Reads the user's
@@ -11,6 +12,15 @@ import { requirePublicEnv } from "@/env";
  */
 export async function createClient() {
   const cookieStore = await cookies();
+
+  // Local mock backend: no Supabase, session tracked by a cookie (see lib/mock/backend.ts).
+  if (isMockMode()) {
+    return createMockClient({
+      getUserId: () => cookieStore.get(MOCK_SESSION_COOKIE)?.value ?? null,
+      clearSession: () => cookieStore.delete(MOCK_SESSION_COOKIE),
+    });
+  }
+
   const { supabaseUrl, supabaseAnonKey } = requirePublicEnv();
 
   return createServerClient<Database>(supabaseUrl, supabaseAnonKey, {
