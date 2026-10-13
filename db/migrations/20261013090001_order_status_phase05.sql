@@ -13,7 +13,7 @@ alter type public.order_status add value if not exists 'balance_paid' after 'qc_
 alter type public.order_status add value if not exists 'at_consolidation' before 'in_transit';
 alter type public.order_status add value if not exists 'at_port_durban' after 'in_transit';
 alter type public.order_status add value if not exists 'at_port_maputo' after 'in_transit';
-alter type public.order_status add value if not exists 'in_transit_road' before 'customs_clearance';
+alter type public.order_status add value if not exists 'in_transit_road' after 'cleared';
 
 -- The order_status_guard trigger + public.change_order_status() RPC reference the enum by name and
 -- continue to work unchanged. After applying this against a real project, regenerate the typed

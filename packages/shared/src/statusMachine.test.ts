@@ -32,9 +32,9 @@ const HAPPY_PATH: OrderStatus[] = [
   "at_consolidation",
   "in_transit",
   "at_port_durban",
-  "in_transit_road",
   "customs_clearance",
   "cleared",
+  "in_transit_road",
   "delivered",
   "fit_confirmed",
   "closed",
@@ -212,13 +212,17 @@ describe("role gating is explicit for every transition", () => {
 });
 
 describe("Phase 0.5 backbone additions", () => {
-  it("branches through either import port, both rejoining at the road leg", () => {
+  it("clears customs at the arrival port, then the road leg to delivery", () => {
     expect(assertCanTransition("in_transit", "at_port_durban", "system")).toBe(true);
     expect(assertCanTransition("in_transit", "at_port_maputo", "system")).toBe(true);
-    expect(assertCanTransition("at_port_durban", "in_transit_road", "system")).toBe(true);
-    expect(assertCanTransition("at_port_maputo", "in_transit_road", "system")).toBe(true);
-    // you cannot skip the port
-    expect(canTransition("in_transit", "in_transit_road")).toBe(false);
+    // both ports clear customs before the road leg
+    expect(assertCanTransition("at_port_durban", "customs_clearance", "system")).toBe(true);
+    expect(assertCanTransition("at_port_maputo", "customs_clearance", "system")).toBe(true);
+    expect(assertCanTransition("cleared", "in_transit_road", "system")).toBe(true);
+    expect(assertCanTransition("in_transit_road", "delivered", "system")).toBe(true);
+    // cannot road before clearing customs, nor skip the port
+    expect(canTransition("at_port_durban", "in_transit_road")).toBe(false);
+    expect(canTransition("in_transit", "customs_clearance")).toBe(false);
   });
 
   it("gates both payments to a human (deposit and balance)", () => {

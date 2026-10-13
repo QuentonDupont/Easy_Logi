@@ -4,7 +4,8 @@
  * Phase 0.5 reconciles the model with the spec (Module 3): the fitment engine ends at `matched`
  * (part approved), sourcing adds the `deposit_paid`/`balance_paid` money gates and `qc_pending`,
  * logistics adds `at_consolidation` -> sea `in_transit` -> `at_port_durban`|`at_port_maputo` ->
- * `in_transit_road` -> customs, and `fit_confirmed` becomes the post-delivery buyer confirmation
+ * customs (at the port) -> `in_transit_road` -> delivered, and `fit_confirmed` is the post-delivery
+ * buyer confirmation
  * before `closed`. See docs/decisions.md (2026-10-13) for the reconciliation.
  *
  * Nothing here touches the database or the network: it is pure, so it is exhaustively
@@ -31,9 +32,9 @@ export const ORDER_STATUSES = [
   "in_transit", // sea freight
   "at_port_durban",
   "at_port_maputo",
-  "in_transit_road",
   "customs_clearance",
   "cleared",
+  "in_transit_road", // road from port inland
   "delivered",
   // --- post-delivery ---
   "fit_confirmed", // buyer confirms the delivered part actually fits
@@ -72,9 +73,9 @@ export const ACTIVE_STATUSES: readonly OrderStatus[] = [
   "in_transit",
   "at_port_durban",
   "at_port_maputo",
-  "in_transit_road",
   "customs_clearance",
   "cleared",
+  "in_transit_road",
   "delivered",
   "fit_confirmed",
 ];
@@ -119,17 +120,17 @@ const BACKBONE: Transition[] = [
   { from: "in_production", to: "qc_pending", roles: HUMAN_AND_SYSTEM },
   { from: "qc_pending", to: "qc_passed", roles: HUMAN }, // QC sign-off
   { from: "qc_passed", to: "balance_paid", roles: HUMAN, requiresHuman: true },
-  // --- logistics ---
+  // --- logistics (customs clears at the port of arrival, before the road leg) ---
   { from: "balance_paid", to: "at_consolidation", roles: HUMAN_AND_SYSTEM },
   { from: "at_consolidation", to: "in_transit", roles: HUMAN_AND_SYSTEM }, // sea departs
   { from: "in_transit", to: "at_port_durban", roles: HUMAN_AND_SYSTEM },
   { from: "in_transit", to: "at_port_maputo", roles: HUMAN_AND_SYSTEM },
-  { from: "at_port_durban", to: "in_transit_road", roles: HUMAN_AND_SYSTEM },
-  { from: "at_port_maputo", to: "in_transit_road", roles: HUMAN_AND_SYSTEM },
-  { from: "in_transit_road", to: "customs_clearance", roles: HUMAN_AND_SYSTEM },
+  { from: "at_port_durban", to: "customs_clearance", roles: HUMAN_AND_SYSTEM },
+  { from: "at_port_maputo", to: "customs_clearance", roles: HUMAN_AND_SYSTEM },
   // customs submission -> human only
   { from: "customs_clearance", to: "cleared", roles: HUMAN, requiresHuman: true },
-  { from: "cleared", to: "delivered", roles: HUMAN_AND_SYSTEM },
+  { from: "cleared", to: "in_transit_road", roles: HUMAN_AND_SYSTEM }, // road from port inland
+  { from: "in_transit_road", to: "delivered", roles: HUMAN_AND_SYSTEM },
   // --- post-delivery ---
   // the buyer confirms the delivered part actually fits, then the order closes
   { from: "delivered", to: "fit_confirmed", roles: ["buyer", "importer", "ops_admin"] },
