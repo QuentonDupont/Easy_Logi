@@ -17,6 +17,14 @@ export const publicEnv = {
   supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
 };
 
+/**
+ * Local mock mode: run the console with an in-memory backend and no Supabase project.
+ * Enabled with NEXT_PUBLIC_USE_MOCK=1 (see src/lib/mock/backend.ts). For local dev only.
+ */
+export function isMockMode(): boolean {
+  return process.env.NEXT_PUBLIC_USE_MOCK === "1";
+}
+
 /** True when the public Supabase config is present. */
 export function hasSupabaseConfig(): boolean {
   return Boolean(publicEnv.supabaseUrl && publicEnv.supabaseAnonKey);

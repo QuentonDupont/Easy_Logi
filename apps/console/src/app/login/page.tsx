@@ -2,13 +2,42 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { hasSupabaseConfig } from "@/env";
+import { hasSupabaseConfig, isMockMode } from "@/env";
+import { mockSignIn } from "./mock-actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 export default function LoginPage() {
+  // Local mock backend: skip magic links, offer a one-click demo sign-in.
+  if (isMockMode()) {
+    return (
+      <main className="flex min-h-screen items-center justify-center p-4">
+        <Card className="w-full max-w-sm">
+          <CardHeader>
+            <CardTitle>Easy Logi Console</CardTitle>
+            <CardDescription>Local demo — in-memory backend, no Supabase.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form action={mockSignIn} className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Signed in as <strong>Demo Ops Admin</strong> (demo@easylogi.local). Data lives in
+                memory and resets when the dev server restarts.
+              </p>
+              <Button type="submit" className="w-full">
+                Enter the console
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      </main>
+    );
+  }
+  return <SupabaseLoginPage />;
+}
+
+function SupabaseLoginPage() {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [message, setMessage] = useState("");

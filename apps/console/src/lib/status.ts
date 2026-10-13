@@ -18,10 +18,16 @@ export function statusBadgeVariant(
   status: OrderStatus,
 ): "default" | "secondary" | "success" | "warning" | "destructive" {
   switch (status) {
-    case "closed":
-    case "delivered":
+    case "matched":
+    case "deposit_paid":
+    case "balance_paid":
+    case "qc_passed":
     case "cleared":
+    case "delivered":
+    case "fit_confirmed":
+    case "closed":
       return "success";
+    case "qc_pending":
     case "on_hold":
       return "warning";
     case "disputed":

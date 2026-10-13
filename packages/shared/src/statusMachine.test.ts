@@ -20,16 +20,23 @@ import {
 const HAPPY_PATH: OrderStatus[] = [
   "requested",
   "fitment_in_progress",
-  "fit_confirmed",
+  "matched",
   "rfq_sent",
   "quoted",
   "po_issued",
+  "deposit_paid",
   "in_production",
+  "qc_pending",
   "qc_passed",
+  "balance_paid",
+  "at_consolidation",
   "in_transit",
+  "at_port_durban",
   "customs_clearance",
   "cleared",
+  "in_transit_road",
   "delivered",
+  "fit_confirmed",
   "closed",
 ];
 
@@ -70,9 +77,11 @@ describe("happy path (human operator)", () => {
 
 describe("human-gated transitions (money / approval / customs)", () => {
   const gated: Array<[OrderStatus, OrderStatus]> = [
-    ["fitment_in_progress", "fit_confirmed"],
-    ["quoted", "po_issued"],
-    ["customs_clearance", "cleared"],
+    ["fitment_in_progress", "matched"], // part-number approval
+    ["quoted", "po_issued"], // PO
+    ["po_issued", "deposit_paid"], // money
+    ["qc_passed", "balance_paid"], // money
+    ["customs_clearance", "cleared"], // customs submission
   ];
 
   it("are flagged requiresHuman", () => {
@@ -111,9 +120,11 @@ describe("illegal transitions throw ILLEGAL_TRANSITION", () => {
     ["requested", "po_issued"],
     ["fit_confirmed", "requested"],
     ["delivered", "requested"],
+    ["delivered", "closed"], // must pass through fit_confirmed first (buyer confirmation)
     ["on_hold", "closed"],
     ["on_hold", "on_hold"],
     ["cleared", "qc_passed"],
+    ["in_transit", "in_transit_road"], // must arrive at a port first
   ];
 
   it.each(illegal)("%s -> %s is rejected", (from, to) => {
@@ -197,6 +208,47 @@ describe("role gating is explicit for every transition", () => {
       }
     })();
     expect(err!.code).toBe("ROLE_NOT_PERMITTED");
+  });
+});
+
+describe("Phase 0.5 backbone additions", () => {
+  it("clears customs at the arrival port, then the road leg to delivery", () => {
+    expect(assertCanTransition("in_transit", "at_port_durban", "system")).toBe(true);
+    expect(assertCanTransition("in_transit", "at_port_maputo", "system")).toBe(true);
+    // both ports clear customs before the road leg
+    expect(assertCanTransition("at_port_durban", "customs_clearance", "system")).toBe(true);
+    expect(assertCanTransition("at_port_maputo", "customs_clearance", "system")).toBe(true);
+    expect(assertCanTransition("cleared", "in_transit_road", "system")).toBe(true);
+    expect(assertCanTransition("in_transit_road", "delivered", "system")).toBe(true);
+    // cannot road before clearing customs, nor skip the port
+    expect(canTransition("at_port_durban", "in_transit_road")).toBe(false);
+    expect(canTransition("in_transit", "customs_clearance")).toBe(false);
+  });
+
+  it("gates both payments to a human (deposit and balance)", () => {
+    expect(requiresHuman("po_issued", "deposit_paid")).toBe(true);
+    expect(requiresHuman("qc_passed", "balance_paid")).toBe(true);
+    expect(assertCanTransition("po_issued", "deposit_paid", "system")).toBe(false);
+    expect(assertCanTransition("qc_passed", "balance_paid", "system")).toBe(false);
+  });
+
+  it("matched replaces the early fit_confirmed as the fitment-complete state", () => {
+    expect(requiresHuman("fitment_in_progress", "matched")).toBe(true);
+    expect(canTransition("fitment_in_progress", "fit_confirmed")).toBe(false);
+    expect(canTransition("matched", "rfq_sent")).toBe(true);
+  });
+
+  it("fit_confirmed is the post-delivery buyer confirmation before closing", () => {
+    expect(assertCanTransition("delivered", "fit_confirmed", "buyer")).toBe(true);
+    expect(assertCanTransition("fit_confirmed", "closed", "buyer")).toBe(true);
+    // the buyer confirmation is not money/approval/customs, so it is not requiresHuman-gated
+    expect(requiresHuman("delivered", "fit_confirmed")).toBe(false);
+  });
+
+  it("qc_pending sits between production and QC sign-off", () => {
+    expect(canTransition("in_production", "qc_pending")).toBe(true);
+    expect(canTransition("qc_pending", "qc_passed")).toBe(true);
+    expect(canTransition("in_production", "qc_passed")).toBe(false);
   });
 });
 

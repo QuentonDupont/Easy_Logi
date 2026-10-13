@@ -84,6 +84,7 @@ export async function runAgent<T>(params: RunAgentParams<T>): Promise<AgentRunRe
         model,
         system: systemPrompt,
         userJson,
+        images: params.images,
         maxTokens: config.maxOutputTokens,
         timeoutMs: config.timeoutMs,
         modelTier: config.modelTier,

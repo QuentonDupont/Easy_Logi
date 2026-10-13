@@ -5,11 +5,12 @@
 
 insert into public.rates_rules (kind, key, value, source, effective_date, verified) values
   -- VAT is 15% in both SZL (Eswatini) and ZAR (South Africa) at time of writing — VERIFY.
-  ('vat',        'ZA',        '{"rate": 0.15}'::jsonb,            'placeholder:verify', '2026-01-01', false),
-  ('vat',        'SZ',        '{"rate": 0.15}'::jsonb,            'placeholder:verify', '2026-01-01', false),
-  -- The ATV uplift added to customs value before VAT (the "+10%") — VERIFY.
-  ('vat_uplift', 'ZA',        '{"rate": 0.10}'::jsonb,            'placeholder:verify', '2026-01-01', false),
-  ('vat_uplift', 'SZ',        '{"rate": 0.10}'::jsonb,            'placeholder:verify', '2026-01-01', false),
+  ('vat',        'ZA',        '{"rate": 0.15}'::jsonb,            'verify-with-clearing-agent', '2026-01-01', false),
+  ('vat',        'SZ',        '{"rate": 0.15}'::jsonb,            'verify-with-clearing-agent', '2026-01-01', false),
+  -- ATV uplift (the "+10%") applied to the SA customs value (= FOB) before VAT — VERIFY with the
+  -- clearing agent; the VAT base is FOB, not CIF (see packages/costing/src/landedCost.ts).
+  ('vat_uplift', 'ZA',        '{"rate": 0.10}'::jsonb,            'verify-with-clearing-agent', '2026-01-01', false),
+  ('vat_uplift', 'SZ',        '{"rate": 0.10}'::jsonb,            'verify-with-clearing-agent', '2026-01-01', false),
   -- Illustrative duty rates by category — VERIFY against the tariff book + HS codes.
   ('duty',       'auto_parts_general', '{"rate": 0.20}'::jsonb,   'placeholder:verify', '2026-01-01', false),
   ('duty',       'tyres',     '{"rate": 0.25}'::jsonb,            'placeholder:verify', '2026-01-01', false),

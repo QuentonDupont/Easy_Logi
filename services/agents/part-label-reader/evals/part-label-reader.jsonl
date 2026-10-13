@@ -1,0 +1,2 @@
+{"id":"no-legible-label","input":{"note":"No photo attached / nothing legible."},"expect":{"confidence_below":0.5},"note":"nothing to read -> low confidence (image evals need harness image support)"}
+{"id":"empty-hint","input":{},"expect":{"confidence_below":0.5},"note":"no image, no hint -> low confidence"}

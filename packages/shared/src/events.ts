@@ -14,8 +14,12 @@ export const EVENT_NAMES = [
   "message.received",
   "request.created",
   "request.photo_added",
+  "request.label_read",
+  "request.intent_extracted",
   "candidates.retrieved",
+  "fitment.ranked",
   "match.low_confidence",
+  "clarification.requested",
   // --- sourcing + supplier-comms (Phase 2) ---
   "rfq.created",
   "supplier_message.unlinked",
