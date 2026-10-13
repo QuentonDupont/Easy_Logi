@@ -125,9 +125,11 @@ This list does **two different jobs**:
 - **Disintermediation** — once a shop has a supplier's WeChat it may skip you. Defence: the things
   they can't get alone (a guaranteed fit, consolidated freight, customs handled, tracking) and
   keeping supplier contact details inside the platform.
-- **Holding client money** — collecting deposits and paying factories triggers payment-handling and
-  cross-border rules; SA and Eswatini have exchange controls on payments abroad. Use a split/escrow
-  payment provider and confirm with the bank before money flows through you.
+- **Paying the wrong seller (not money-handling)** — Easy Logi **never holds or forwards part
+  payments**; buyers pay sellers directly (see [`commerce-model.md`](./commerce-model.md)), which
+  sidesteps the cross-border money-handling and exchange-control problem. The remaining risk is
+  paying the *wrong* seller: verify each seller's payment details once and **hold on any change**
+  until re-verified.
 - **Liability** — terms must state who carries a wrong part. The **fit guarantee covers only parts
   Easy Logi matched and verified** — which rule 1 (no model-invented part numbers) already enforces,
   so the boundary is defensible by design.
@@ -141,7 +143,7 @@ This list does **two different jobs**:
 | **Supplier directory with local distributors** | Local distributors alongside Chinese/Thai factories, each tagged with lead time. | A/B (extends `suppliers` + supplier verification) |
 | **Local-vs-import sourcing** | Compare "local in 2 days" against "import in 6 weeks" for the same part. | A (the local fast-lane feature above) |
 | **Service-fee line + agent terms** | A service-fee line and agent terms on every non-own order. | A (extends quotes + order; needs the terms copy) |
-| **Exchange-control-aware payments** | Split/escrow provider for cross-border buyer deposits → factory payments. | C/D (builds on `payments`) |
+| **Buyer→seller payment routing** | Route buyers to the seller's own verified payment option (ranked by protection) and capture payment evidence — Easy Logi never holds or forwards part payments; only its own fee is invoiced. See [`commerce-model.md`](./commerce-model.md). | A/C |
 
 The expansion to West/East African markets (buyers, not suppliers) sits in **Phase E** alongside the
 cross-tenant moat.
