@@ -54,6 +54,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
                   Ingest
                 </Link>
               )}
+              {isOps && (
+                <Link href="/ops" className="text-muted-foreground hover:text-foreground">
+                  Ops
+                </Link>
+              )}
             </nav>
           </div>
           <div className="flex items-center gap-4">

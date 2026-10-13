@@ -151,6 +151,7 @@ function seed(): MockStore {
   ];
 
   const { vehicles, parts, fitments } = fitmentCatalog();
+  const ops = opsSeed();
 
   return {
     organisations: [
@@ -168,13 +169,13 @@ function seed(): MockStore {
     ],
     orders,
     order_status_changes,
-    events: [],
+    events: ops.events,
     vehicles,
     parts,
     fitments,
     requests: [],
     order_lines: [],
-    agent_runs: [],
+    agent_runs: ops.agent_runs,
     part_crossrefs: [],
     magic_link_tokens: [],
     ingestion_batches: [],
@@ -256,6 +257,69 @@ function fitmentCatalog(): { vehicles: Row[]; parts: Row[]; fitments: Row[] } {
   ];
 
   return { vehicles, parts, fitments };
+}
+
+/** Seed a little agent-run + event history so the Ops Health page shows signal out of the box. */
+function opsSeed(): { agent_runs: Row[]; events: Row[] } {
+  const order2 = "11111111-1111-1111-1111-111111111102";
+  const order3 = "11111111-1111-1111-1111-111111111103";
+  const run = (
+    agent: string,
+    tier: "haiku" | "sonnet",
+    tokensIn: number,
+    tokensOut: number,
+    latencyMs: number,
+    outcome: string,
+    error: string | null,
+    orderId: string | null,
+    daysAgo: number,
+  ): Row => ({
+    id: crypto.randomUUID(),
+    order_id: orderId,
+    agent,
+    model: `${tier === "haiku" ? "claude-haiku-5-5" : "claude-sonnet-5-5"} (offline)`,
+    tokens_in: tokensIn,
+    tokens_out: tokensOut,
+    latency_ms: latencyMs,
+    tool_calls: 0,
+    outcome,
+    error,
+    created_at: iso(daysAgo),
+  });
+
+  const agent_runs: Row[] = [
+    run("part-intent-extractor", "haiku", 120, 60, 4, "ok", null, order3, 1),
+    run("fitment-ranker", "sonnet", 300, 90, 9, "ok", null, order3, 1),
+    run("part-intent-extractor", "haiku", 100, 40, 3, "low_confidence", null, order2, 2),
+    run("fitment-ranker", "sonnet", 280, 70, 12, "low_confidence", null, order2, 2),
+    run("clarifier", "haiku", 90, 50, 3, "ok", null, order2, 2),
+    run("part-label-reader", "sonnet", 200, 30, 6, "error", "offline model can't read an uploaded image", null, 3),
+  ];
+
+  const events: Row[] = [
+    {
+      id: crypto.randomUUID(),
+      org_id: DEMO_ORG_ID,
+      name: "order.created",
+      order_id: order3,
+      payload: { reference: "EL-261005-AA03" },
+      dedupe_key: `order.created:${order3}`,
+      processed_at: iso(7),
+      created_at: iso(7),
+    },
+    {
+      id: crypto.randomUUID(),
+      org_id: DEMO_ORG_ID,
+      name: "match.low_confidence",
+      order_id: order2,
+      payload: { reason: "Two Hilux generations matched" },
+      dedupe_key: null,
+      processed_at: null,
+      created_at: iso(2),
+    },
+  ];
+
+  return { agent_runs, events };
 }
 
 /**
@@ -515,6 +579,29 @@ export function listAgentRuns(orderId: string): AgentRunRow[] {
   return (store().agent_runs as AgentRunRow[])
     .filter((r) => r.order_id === orderId)
     .sort((a, b) => b.created_at.localeCompare(a.created_at));
+}
+
+export type EventRow = {
+  id: string;
+  org_id: string;
+  name: string;
+  order_id: string | null;
+  payload: Record<string, unknown>;
+  dedupe_key: string | null;
+  processed_at: string | null;
+  created_at: string;
+};
+
+/** All agent-run rows, newest first (for the Ops Health page). */
+export function listAllAgentRuns(): AgentRunRow[] {
+  return [...(store().agent_runs as AgentRunRow[])].sort((a, b) =>
+    b.created_at.localeCompare(a.created_at),
+  );
+}
+
+/** All event rows (for the Ops Health page). */
+export function listAllEvents(): EventRow[] {
+  return store().events as EventRow[];
 }
 
 // ---------------------------------------------------------------------------
