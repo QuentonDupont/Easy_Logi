@@ -116,8 +116,8 @@ export function Landing() {
             <AudienceCard
               title="Suppliers"
               body="Receive a request and send back a quote through a secure link — no login, no portal to learn."
-              cta="See a supplier link"
-              href="/dashboard"
+              cta="How it works"
+              href="#how"
             />
           </div>
         </div>

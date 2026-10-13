@@ -37,6 +37,7 @@ export function BuyerRequest() {
           value={text}
           onChange={(e) => setText(e.target.value)}
           rows={3}
+          aria-label="Describe the part you need"
           placeholder="e.g. Front brake pads for my 2018 Toyota Hilux 2.8"
           className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-base shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
         />

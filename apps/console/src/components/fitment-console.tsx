@@ -100,8 +100,8 @@ export function FitmentConsole({ offline }: { offline: boolean }) {
             </CardTitle>
             <CardDescription>
               {offline
-                ? "No API key — pick a sample label below. (Set ANTHROPIC_API_KEY to read a real uploaded photo with Sonnet vision.)"
-                : "Upload a photo of the part or its box — Sonnet vision reads the part number."}
+                ? "Demo mode — pick a sample label below. (Connect a vision model to read a real uploaded photo.)"
+                : "Upload a photo of the part or its box — the vision model reads the part number."}
             </CardDescription>
           </CardHeader>
           <CardContent>
