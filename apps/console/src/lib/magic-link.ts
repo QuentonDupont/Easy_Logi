@@ -78,3 +78,21 @@ export function redeemMagicLink(
   if (!markMagicLinkTokenUsed(v.tokenHash)) return { ok: false, reason: "already_used" };
   return { ok: true, orderId: v.payload.oid, pageType: v.payload.pt };
 }
+
+/**
+ * Verify a token WITHOUT consuming it — for read-only pages a holder may open repeatedly (order
+ * tracking). Checks signature, expiry, scope and that the row still exists; never marks it used.
+ */
+export function verifyMagicLink(
+  token: string,
+  scope?: { orderId?: string; pageType?: MagicLinkPageType },
+): RedeemResult {
+  const v = verifyToken(token, { secret: secret(), orderId: scope?.orderId, pageType: scope?.pageType });
+  if (!v.ok) return { ok: false, reason: v.reason };
+  const row = findMagicLinkToken(v.tokenHash);
+  if (!row) return { ok: false, reason: "unknown" };
+  if (row.order_id !== v.payload.oid || row.page_type !== v.payload.pt) {
+    return { ok: false, reason: "scope_mismatch" };
+  }
+  return { ok: true, orderId: v.payload.oid, pageType: v.payload.pt };
+}

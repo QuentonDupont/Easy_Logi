@@ -619,6 +619,11 @@ export function listAllOrders(): OrderRow[] {
   return [...(store().orders as OrderRow[])].sort((a, b) => b.created_at.localeCompare(a.created_at));
 }
 
+/** One order by id (for the public tracking page). */
+export function getOrderById(id: string): OrderRow | undefined {
+  return (store().orders as OrderRow[]).find((o) => o.id === id);
+}
+
 // ---------------------------------------------------------------------------
 // Magic-link tokens (Phase 0.5). Only the token HASH is stored; see lib/magic-link.ts
 // and packages/shared/src/magicLink.ts. Single-use is enforced via used_at.
