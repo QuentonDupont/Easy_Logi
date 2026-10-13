@@ -6,6 +6,7 @@
 import {
   issueToken,
   verifyToken,
+  hashToken,
   type MagicLinkPageType,
 } from "@easy-logi/shared/magicLink";
 import {
@@ -95,4 +96,10 @@ export function verifyMagicLink(
     return { ok: false, reason: "scope_mismatch" };
   }
   return { ok: true, orderId: v.payload.oid, pageType: v.payload.pt };
+}
+
+/** Whether a token has already been consumed (for one-time pages like supplier quotes). */
+export function isMagicLinkUsed(token: string): boolean {
+  const row = findMagicLinkToken(hashToken(token));
+  return Boolean(row?.used_at);
 }

@@ -12,6 +12,7 @@ import {
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentProfile, toConsoleRole } from "@/lib/auth";
 import { ACTIVE_ORG_COOKIE } from "@/lib/org";
+import { issueMagicLink } from "@/lib/magic-link";
 
 function generateReference(): string {
   const date = new Date().toISOString().slice(2, 10).replace(/-/g, "");
@@ -129,4 +130,44 @@ export async function changeStatus(_prev: ActionState, formData: FormData): Prom
   revalidatePath(`/orders/${orderId}`);
   revalidatePath("/orders");
   return { ok: true };
+}
+
+function baseUrl(): string {
+  return process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+}
+
+/** Ops: issue a no-login buyer tracking link for an order (repeatable to view). */
+export async function issueTrackingLink(
+  _prev: { url?: string; error?: string },
+  formData: FormData,
+): Promise<{ url?: string; error?: string }> {
+  const profile = await getCurrentProfile();
+  if (!profile || profile.role !== "ops_admin") return { error: "Ops admins only." };
+  const orderId = String(formData.get("orderId") ?? "");
+  if (!orderId) return { error: "Missing order." };
+  const { token } = issueMagicLink({
+    orgId: profile.orgId,
+    orderId,
+    pageType: "tracking",
+    createdBy: profile.id,
+  });
+  return { url: `${baseUrl()}/track/${token}` };
+}
+
+/** Ops: issue a single-use supplier quote link for an order. */
+export async function issueSupplierLink(
+  _prev: { url?: string; error?: string },
+  formData: FormData,
+): Promise<{ url?: string; error?: string }> {
+  const profile = await getCurrentProfile();
+  if (!profile || profile.role !== "ops_admin") return { error: "Ops admins only." };
+  const orderId = String(formData.get("orderId") ?? "");
+  if (!orderId) return { error: "Missing order." };
+  const { token } = issueMagicLink({
+    orgId: profile.orgId,
+    orderId,
+    pageType: "supplier_quote",
+    createdBy: profile.id,
+  });
+  return { url: `${baseUrl()}/quote/${token}` };
 }

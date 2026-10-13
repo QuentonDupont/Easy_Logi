@@ -37,6 +37,7 @@ interface MockStore {
   magic_link_tokens: Row[];
   ingestion_batches: Row[];
   ingestion_rows: Row[];
+  quotes: Row[];
 }
 
 /** Typed shapes for the fitment-engine tables the pipeline reads (see lib/fitment). */
@@ -180,6 +181,7 @@ function seed(): MockStore {
     magic_link_tokens: [],
     ingestion_batches: [],
     ingestion_rows: [],
+    quotes: [],
   };
 }
 
@@ -619,9 +621,32 @@ export function listAllOrders(): OrderRow[] {
   return [...(store().orders as OrderRow[])].sort((a, b) => b.created_at.localeCompare(a.created_at));
 }
 
-/** One order by id (for the public tracking page). */
+/** One order by id (for the public tracking + supplier-quote pages). */
 export function getOrderById(id: string): OrderRow | undefined {
   return (store().orders as OrderRow[]).find((o) => o.id === id);
+}
+
+/** Record a supplier quote (from the public supplier-quote page). */
+export function addQuote(input: {
+  orgId: string;
+  orderId: string;
+  supplierName: string;
+  currency: string;
+  unitPriceMinor: number;
+  leadTimeDays: number | null;
+  moq: number | null;
+}): void {
+  store().quotes.push({
+    id: crypto.randomUUID(),
+    org_id: input.orgId,
+    order_id: input.orderId,
+    supplier_name: input.supplierName,
+    currency: input.currency,
+    unit_price_minor: input.unitPriceMinor,
+    lead_time_days: input.leadTimeDays,
+    moq: input.moq,
+    created_at: new Date().toISOString(),
+  });
 }
 
 // ---------------------------------------------------------------------------
