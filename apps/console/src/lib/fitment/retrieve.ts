@@ -112,7 +112,8 @@ export function retrieveCandidates(intent: PartIntent, data: FitmentData): Candi
   return candidates.slice(0, 8);
 }
 
-function normalizePartNumber(s: string): string {
+/** Canonical form of a part number for comparison: strip non-alphanumerics, uppercase. */
+export function normalizePartNumber(s: string): string {
   return s.replace(/[^a-z0-9]/gi, "").toUpperCase();
 }
 

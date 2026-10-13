@@ -32,8 +32,11 @@ interface MockStore {
   requests: Row[];
   order_lines: Row[];
   agent_runs: Row[];
+  part_crossrefs: Row[];
   // --- Phase 0.5 feature tables ---
   magic_link_tokens: Row[];
+  ingestion_batches: Row[];
+  ingestion_rows: Row[];
 }
 
 /** Typed shapes for the fitment-engine tables the pipeline reads (see lib/fitment). */
@@ -172,7 +175,10 @@ function seed(): MockStore {
     requests: [],
     order_lines: [],
     agent_runs: [],
+    part_crossrefs: [],
     magic_link_tokens: [],
+    ingestion_batches: [],
+    ingestion_rows: [],
   };
 }
 
@@ -559,4 +565,128 @@ export function markMagicLinkTokenUsed(tokenHash: string): boolean {
   if (!row || row.used_at) return false;
   row.used_at = new Date().toISOString();
   return true;
+}
+
+// ---------------------------------------------------------------------------
+// Catalogue writes + ingestion staging (Phase 0.5, item 6). The ingestion
+// pipeline (lib/ingest) stages parsed rows here, then publishes approved rows
+// into the parts / part_crossrefs / fitments catalogue with source + confidence.
+// ---------------------------------------------------------------------------
+
+function normNumber(s: string): string {
+  return s.replace(/[^a-z0-9]/gi, "").toUpperCase();
+}
+
+/** Insert a catalogue part (idempotent by brand + normalized number); returns the part id. */
+export function addCatalogPart(input: {
+  partNumber: string;
+  brand: string;
+  category: string;
+  description: string;
+}): string {
+  const s = store();
+  const existing = (s.parts as PartRow[]).find(
+    (p) =>
+      p.brand.toLowerCase() === input.brand.toLowerCase() &&
+      normNumber(p.part_number) === normNumber(input.partNumber),
+  );
+  if (existing) return existing.id;
+  const id = `ing-${crypto.randomUUID().slice(0, 8)}`;
+  s.parts.push({
+    id,
+    part_number: input.partNumber,
+    brand: input.brand,
+    category: input.category,
+    description: input.description,
+  });
+  return id;
+}
+
+export function addCatalogCrossref(input: {
+  partId: string;
+  crossrefBrand: string;
+  crossrefNumber: string;
+}): void {
+  store().part_crossrefs.push({
+    id: crypto.randomUUID(),
+    part_id: input.partId,
+    crossref_brand: input.crossrefBrand,
+    crossref_number: input.crossrefNumber,
+    created_at: new Date().toISOString(),
+  });
+}
+
+export function addCatalogFitment(input: {
+  vehicleId: string;
+  partId: string;
+  position: string | null;
+  source: string;
+  confidence: number;
+}): void {
+  store().fitments.push({
+    id: `fit-${crypto.randomUUID().slice(0, 8)}`,
+    vehicle_id: input.vehicleId,
+    part_id: input.partId,
+    position: input.position,
+    source: input.source,
+    confidence: input.confidence,
+  });
+}
+
+/** Resolve a vehicle id from a make/model (case-insensitive contains); null if no match. */
+export function resolveVehicleId(make: string, model: string): string | null {
+  const m = make.toLowerCase().trim();
+  const mo = model.toLowerCase().trim();
+  const v = (store().vehicles as VehicleRow[]).find(
+    (x) => x.make.toLowerCase().includes(m) && x.model.toLowerCase().includes(mo),
+  );
+  return v ? v.id : null;
+}
+
+export type IngestionBatchRow = {
+  id: string;
+  org_id: string;
+  filename: string;
+  status: string;
+  row_count: number;
+  created_at: string;
+};
+
+export function createIngestionBatch(input: { orgId: string; filename: string; rowCount: number }): string {
+  const id = crypto.randomUUID();
+  store().ingestion_batches.push({
+    id,
+    org_id: input.orgId,
+    filename: input.filename,
+    status: "staged",
+    row_count: input.rowCount,
+    created_at: new Date().toISOString(),
+  });
+  return id;
+}
+
+/** Save staged rows (opaque row objects produced by lib/ingest) under a batch. */
+export function saveIngestionRows(batchId: string, rows: Array<Record<string, unknown>>): void {
+  const now = new Date().toISOString();
+  for (const r of rows) {
+    store().ingestion_rows.push({ id: crypto.randomUUID(), batch_id: batchId, created_at: now, ...r });
+  }
+}
+
+export function getIngestionBatch(batchId: string): IngestionBatchRow | undefined {
+  return (store().ingestion_batches as IngestionBatchRow[]).find((b) => b.id === batchId);
+}
+
+export function listIngestionRows(batchId: string): Row[] {
+  return store().ingestion_rows.filter((r) => r.batch_id === batchId);
+}
+
+export function updateIngestionRowStatus(rowId: string, status: string): void {
+  const r = store().ingestion_rows.find((x) => x.id === rowId);
+  if (r) r.status = status;
+}
+
+export function markIngestionBatchPublished(batchId: string): void {
+  const b = store().ingestion_batches.find((x) => x.id === batchId);
+  if (b) b.status = "published";
 }
