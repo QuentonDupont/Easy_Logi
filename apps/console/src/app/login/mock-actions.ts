@@ -16,5 +16,5 @@ export async function mockSignIn(): Promise<void> {
     path: "/",
     maxAge: 60 * 60 * 24 * 7,
   });
-  redirect("/orders");
+  redirect("/dashboard");
 }

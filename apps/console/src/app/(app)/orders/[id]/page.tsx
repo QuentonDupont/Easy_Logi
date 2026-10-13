@@ -22,6 +22,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { StatusControl } from "@/components/status-control";
+import { StatusJourney } from "@/components/status-journey";
+import { ShareLinks } from "@/components/share-links";
 
 export const dynamic = "force-dynamic";
 
@@ -47,6 +49,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
   const current = order.status as OrderStatus;
   const role = profile ? toConsoleRole(profile.role) : "importer";
   const options = nextStatusOptions(current, role);
+  const isOps = profile?.role === "ops_admin";
 
   return (
     <div className="space-y-6">
@@ -62,6 +65,8 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
         <Badge variant={statusBadgeVariant(current)}>{statusLabel(current)}</Badge>
       </div>
       {order.summary && <p className="text-muted-foreground">{order.summary}</p>}
+
+      <StatusJourney status={current} />
 
       <div className="grid gap-6 md:grid-cols-[1fr_320px]">
         <Card>
@@ -105,15 +110,29 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Change status</CardTitle>
-            <CardDescription>Only valid transitions are offered.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <StatusControl orderId={order.id} options={options} />
-          </CardContent>
-        </Card>
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Change status</CardTitle>
+              <CardDescription>Only valid transitions are offered.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <StatusControl orderId={order.id} options={options} />
+            </CardContent>
+          </Card>
+
+          {isOps && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Share</CardTitle>
+                <CardDescription>No-login links for the buyer and suppliers.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ShareLinks orderId={order.id} />
+              </CardContent>
+            </Card>
+          )}
+        </div>
       </div>
     </div>
   );

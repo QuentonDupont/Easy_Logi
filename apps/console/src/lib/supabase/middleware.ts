@@ -8,8 +8,12 @@ import { MOCK_SESSION_COOKIE } from "@/lib/mock/backend";
 function gate(request: NextRequest, response: NextResponse, authed: boolean): NextResponse {
   const { pathname } = request.nextUrl;
   const isPublic =
+    pathname === "/" ||
     pathname.startsWith("/login") ||
     pathname.startsWith("/auth") ||
+    pathname.startsWith("/request") || // buyer part-request intake (public)
+    pathname.startsWith("/track") || // buyer order tracking (magic link)
+    pathname.startsWith("/quote") || // supplier quote submission (magic link)
     pathname === "/favicon.ico";
 
   if (!authed && !isPublic) {
@@ -19,7 +23,7 @@ function gate(request: NextRequest, response: NextResponse, authed: boolean): Ne
   }
   if (authed && pathname === "/login") {
     const url = request.nextUrl.clone();
-    url.pathname = "/orders";
+    url.pathname = "/dashboard";
     return NextResponse.redirect(url);
   }
   return response;

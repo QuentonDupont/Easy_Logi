@@ -100,8 +100,8 @@ export function FitmentConsole({ offline }: { offline: boolean }) {
             </CardTitle>
             <CardDescription>
               {offline
-                ? "No API key — pick a sample label below. (Set ANTHROPIC_API_KEY to read a real uploaded photo with Sonnet vision.)"
-                : "Upload a photo of the part or its box — Sonnet vision reads the part number."}
+                ? "Demo mode — pick a sample label below. (Connect a vision model to read a real uploaded photo.)"
+                : "Upload a photo of the part or its box — the vision model reads the part number."}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -267,7 +267,7 @@ function ResultView({ result, offline }: { result: FitmentResult; offline: boole
           </div>
           <Badge variant="secondary">
             <Sparkles className="mr-1 h-3 w-3" />
-            {offline ? "offline model" : "Claude"}
+            {offline ? "Offline demo" : "Live AI"}
           </Badge>
         </CardHeader>
         <CardContent className="space-y-1">
@@ -277,7 +277,6 @@ function ResultView({ result, offline }: { result: FitmentResult; offline: boole
               className="flex items-center justify-between gap-3 border-b py-1 text-xs last:border-b-0"
             >
               <span className="font-medium">{r.agent}</span>
-              <span className="text-muted-foreground">{r.model}</span>
               <Badge variant={r.outcome === "ok" ? "success" : "warning"}>{r.outcome}</Badge>
               <span className="text-muted-foreground">{r.latencyMs}ms</span>
               <span className="text-muted-foreground">
