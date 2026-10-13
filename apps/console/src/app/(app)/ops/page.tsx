@@ -22,6 +22,10 @@ function outcomeVariant(o: string): "default" | "secondary" | "success" | "warni
   return "secondary";
 }
 
+function plural(n: number, word: string): string {
+  return `${n} ${word}${n === 1 ? "" : "s"}`;
+}
+
 function Stat({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
     <Card>
@@ -65,7 +69,11 @@ export default async function OpsPage() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <Stat label="Agent runs" value={String(summary.total)} />
         <Stat label="OK rate" value={`${okRate}%`} hint={`${summary.ok} ok`} />
-        <Stat label="Needs human" value={String(summary.needsHuman + queueEvents.length)} hint={`${queueRuns.length} runs · ${queueEvents.length} events`} />
+        <Stat
+          label="Needs human"
+          value={String(summary.needsHuman + queueEvents.length)}
+          hint={`${plural(queueRuns.length, "run")} · ${plural(queueEvents.length, "event")}`}
+        />
         <Stat label="Latency p95" value={`${summary.p95LatencyMs}ms`} hint={`p50 ${summary.p50LatencyMs}ms`} />
         <Stat label="Tokens" value={`${summary.tokensIn}→${summary.tokensOut}`} hint="in → out" />
       </div>
