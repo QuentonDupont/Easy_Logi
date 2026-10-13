@@ -71,7 +71,7 @@ function parseRuns(raw: string): AgentRunSummary[] {
 
 /**
  * Confirm a candidate part as the fit: create an order, write the order line (the part number the
- * human approved — CLAUDE.md rules 1 & 2), move it requested -> fitment_in_progress -> fit_confirmed
+ * human approved — CLAUDE.md rules 1 & 2), move it requested -> fitment_in_progress -> matched
  * through the status machine, and persist the agent-run log. Then open the new order.
  */
 export async function confirmFit(formData: FormData): Promise<void> {
@@ -118,10 +118,11 @@ export async function confirmFit(formData: FormData): Promise<void> {
     })),
   );
 
-  // Walk the status machine: requested -> fitment_in_progress -> fit_confirmed (human approval).
+  // Walk the status machine: requested -> fitment_in_progress -> matched (human part approval).
+  // (fit_confirmed is now the post-delivery buyer confirmation; matched is fitment-complete.)
   const steps: Array<[OrderStatus, OrderStatus, string]> = [
     ["requested", "fitment_in_progress", "Fitment started from buyer request."],
-    ["fitment_in_progress", "fit_confirmed", `Fit confirmed: ${partNumber}.`],
+    ["fitment_in_progress", "matched", `Part matched & approved: ${partNumber}.`],
   ];
   for (const [from, to, note] of steps) {
     try {

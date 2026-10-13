@@ -11,7 +11,7 @@ const RATES: RateSet = {
 };
 
 describe("lineLandedCost", () => {
-  it("computes duty on FOB, VAT on uplifted customs value + duty, and landed total", () => {
+  it("computes duty on FOB, VAT on uplifted FOB + duty, and landed total", () => {
     const r = lineLandedCost(
       {
         fob: fromMajor(10000, "ZAR"),
@@ -23,12 +23,26 @@ describe("lineLandedCost", () => {
 
     // duty = 0.20 x 10000 = 2000
     expect(r.duty).toEqual(fromMajor(2000, "ZAR"));
-    // customs value (CIF) = 10000 + 2000 + 500 = 12500
-    expect(r.customsValue).toEqual(fromMajor(12500, "ZAR"));
-    // VAT = 0.15 x (1.10 x 12500 + 2000) = 0.15 x 15750 = 2362.50
-    expect(r.vat).toEqual(fromMajor(2362.5, "ZAR"));
-    // landed = 10000 + 2000 + 500 + 2000 + 2362.50 = 16862.50
-    expect(r.landed).toEqual(fromMajor(16862.5, "ZAR"));
+    // SA customs value for VAT = FOB = 10000 (freight/insurance excluded)
+    expect(r.customsValue).toEqual(fromMajor(10000, "ZAR"));
+    // VAT = 0.15 x (1.10 x 10000 + 2000) = 0.15 x 13000 = 1950.00
+    expect(r.vat).toEqual(fromMajor(1950, "ZAR"));
+    // landed = 10000 + 2000 + 500 + 2000 + 1950 = 16450.00 (freight/insurance still in landed)
+    expect(r.landed).toEqual(fromMajor(16450, "ZAR"));
+  });
+
+  it("excludes freight and insurance from the VAT base (customs value is FOB only)", () => {
+    const fobOnly = lineLandedCost({ fob: fromMajor(10000, "ZAR") }, RATES);
+    const withShipping = lineLandedCost(
+      { fob: fromMajor(10000, "ZAR"), freight: fromMajor(2000, "ZAR"), insurance: fromMajor(500, "ZAR") },
+      RATES,
+    );
+    // duty, customs value and VAT are identical — freight/insurance do not enter the VAT base
+    expect(withShipping.duty).toEqual(fobOnly.duty);
+    expect(withShipping.customsValue).toEqual(fobOnly.customsValue);
+    expect(withShipping.vat).toEqual(fobOnly.vat);
+    // but freight + insurance do raise the landed total by exactly their sum
+    expect(withShipping.landed.minor - fobOnly.landed.minor).toBe(250000);
   });
 
   it("treats otherCharges as non-dutiable but part of landed cost", () => {

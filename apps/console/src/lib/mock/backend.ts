@@ -128,7 +128,7 @@ function seed(): MockStore {
     {
       id: "22222222-2222-2222-2222-222222222202",
       order_id: "11111111-1111-1111-1111-111111111103",
-      from_status: "fit_confirmed",
+      from_status: "matched",
       to_status: "rfq_sent",
       role: "ops_admin",
       note: "RFQ to 4 suppliers.",

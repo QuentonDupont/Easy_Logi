@@ -1,10 +1,11 @@
 /**
  * Order status machine — the ONLY place order status may change (CLAUDE.md rule 3).
  *
- * The model is derived from docs/phase-0-kickoff.md ("requested -> ... -> fit_confirmed,
- * plus on_hold, disputed, cancelled") and the two-engine flow described in CLAUDE.md
- * (fitment engine, then sourcing: RFQ -> quotes -> PO -> QC -> customs -> delivery).
- * See docs/decisions.md for why this exact set was chosen pending the full spec.
+ * Phase 0.5 reconciles the model with the spec (Module 3): the fitment engine ends at `matched`
+ * (part approved), sourcing adds the `deposit_paid`/`balance_paid` money gates and `qc_pending`,
+ * logistics adds `at_consolidation` -> sea `in_transit` -> `at_port_durban`|`at_port_maputo` ->
+ * `in_transit_road` -> customs, and `fit_confirmed` becomes the post-delivery buyer confirmation
+ * before `closed`. See docs/decisions.md (2026-10-13) for the reconciliation.
  *
  * Nothing here touches the database or the network: it is pure, so it is exhaustively
  * unit-testable and safe to call from both the browser and the server.
@@ -15,17 +16,27 @@ export const ORDER_STATUSES = [
   // --- fitment engine ---
   "requested",
   "fitment_in_progress",
-  "fit_confirmed",
+  "matched", // part number matched & approved (fitment complete)
   // --- sourcing + supplier-comms engine ---
   "rfq_sent",
   "quoted",
   "po_issued",
+  "deposit_paid",
   "in_production",
+  "qc_pending",
   "qc_passed",
-  "in_transit",
+  "balance_paid",
+  // --- logistics ---
+  "at_consolidation",
+  "in_transit", // sea freight
+  "at_port_durban",
+  "at_port_maputo",
+  "in_transit_road",
   "customs_clearance",
   "cleared",
   "delivered",
+  // --- post-delivery ---
+  "fit_confirmed", // buyer confirms the delivered part actually fits
   "closed",
   // --- out-of-band states ---
   "on_hold",
@@ -48,16 +59,24 @@ export type Role = (typeof ROLES)[number];
 export const ACTIVE_STATUSES: readonly OrderStatus[] = [
   "requested",
   "fitment_in_progress",
-  "fit_confirmed",
+  "matched",
   "rfq_sent",
   "quoted",
   "po_issued",
+  "deposit_paid",
   "in_production",
+  "qc_pending",
   "qc_passed",
+  "balance_paid",
+  "at_consolidation",
   "in_transit",
+  "at_port_durban",
+  "at_port_maputo",
+  "in_transit_road",
   "customs_clearance",
   "cleared",
   "delivered",
+  "fit_confirmed",
 ];
 
 /** Terminal states have no outgoing transitions. */
@@ -84,22 +103,37 @@ const HUMAN_AND_SYSTEM = ["importer", "ops_admin", "system"] as const satisfies 
  * `requiresHuman` marks the gates that commit money/approvals/customs.
  */
 const BACKBONE: Transition[] = [
+  // --- fitment engine ---
   { from: "requested", to: "fitment_in_progress", roles: HUMAN_AND_SYSTEM },
-  // confirming the fitment approves a part number -> human only (rule 1 & 2)
-  { from: "fitment_in_progress", to: "fit_confirmed", roles: HUMAN, requiresHuman: true },
+  // confirming the match approves a part number -> human only (rule 1 & 2)
+  { from: "fitment_in_progress", to: "matched", roles: HUMAN, requiresHuman: true },
   { from: "fitment_in_progress", to: "requested", roles: HUMAN }, // reopen for more info
-  { from: "fit_confirmed", to: "rfq_sent", roles: HUMAN },
+  // --- sourcing + supplier-comms ---
+  { from: "matched", to: "rfq_sent", roles: HUMAN },
   { from: "rfq_sent", to: "quoted", roles: HUMAN_AND_SYSTEM }, // quotes arrive via system
   // issuing the PO commits money -> human only
   { from: "quoted", to: "po_issued", roles: HUMAN, requiresHuman: true },
-  { from: "po_issued", to: "in_production", roles: HUMAN_AND_SYSTEM },
-  { from: "in_production", to: "qc_passed", roles: HUMAN },
-  { from: "qc_passed", to: "in_transit", roles: HUMAN },
-  { from: "in_transit", to: "customs_clearance", roles: HUMAN_AND_SYSTEM },
+  // deposit & balance are payments -> human only
+  { from: "po_issued", to: "deposit_paid", roles: HUMAN, requiresHuman: true },
+  { from: "deposit_paid", to: "in_production", roles: HUMAN_AND_SYSTEM },
+  { from: "in_production", to: "qc_pending", roles: HUMAN_AND_SYSTEM },
+  { from: "qc_pending", to: "qc_passed", roles: HUMAN }, // QC sign-off
+  { from: "qc_passed", to: "balance_paid", roles: HUMAN, requiresHuman: true },
+  // --- logistics ---
+  { from: "balance_paid", to: "at_consolidation", roles: HUMAN_AND_SYSTEM },
+  { from: "at_consolidation", to: "in_transit", roles: HUMAN_AND_SYSTEM }, // sea departs
+  { from: "in_transit", to: "at_port_durban", roles: HUMAN_AND_SYSTEM },
+  { from: "in_transit", to: "at_port_maputo", roles: HUMAN_AND_SYSTEM },
+  { from: "at_port_durban", to: "in_transit_road", roles: HUMAN_AND_SYSTEM },
+  { from: "at_port_maputo", to: "in_transit_road", roles: HUMAN_AND_SYSTEM },
+  { from: "in_transit_road", to: "customs_clearance", roles: HUMAN_AND_SYSTEM },
   // customs submission -> human only
   { from: "customs_clearance", to: "cleared", roles: HUMAN, requiresHuman: true },
   { from: "cleared", to: "delivered", roles: HUMAN_AND_SYSTEM },
-  { from: "delivered", to: "closed", roles: ["importer", "ops_admin", "buyer"] },
+  // --- post-delivery ---
+  // the buyer confirms the delivered part actually fits, then the order closes
+  { from: "delivered", to: "fit_confirmed", roles: ["buyer", "importer", "ops_admin"] },
+  { from: "fit_confirmed", to: "closed", roles: ["buyer", "importer", "ops_admin"] },
 ];
 
 /**

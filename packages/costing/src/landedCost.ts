@@ -37,11 +37,14 @@ export interface LineLandedCost {
   fob: Money;
   freight: Money;
   insurance: Money;
-  /** FOB + freight + insurance (CIF) — the basis the VAT uplift is applied to. */
+  /**
+   * SA customs value for VAT = FOB. Freight and insurance are NOT in the VAT base (they are
+   * still added to `landed` below). Verify this basis with the clearing agent.
+   */
   customsValue: Money;
   /** dutyRate x FOB. */
   duty: Money;
-  /** vatRate x ((1 + uplift) x customsValue + duty). */
+  /** vatRate x ((1 + uplift) x FOB + duty). */
   vat: Money;
   otherCharges: Money;
   /** FOB + freight + insurance + duty + VAT + otherCharges. */
@@ -79,10 +82,11 @@ export function lineLandedCost(input: LineCostInput, rates: RateSet): LineLanded
   // duty on FOB
   const duty = scale(input.fob, rates.dutyRate);
 
-  // customs value (CIF) = FOB + freight + insurance
-  const customsValue = add(add(input.fob, freight), insurance);
+  // SA customs value for VAT is the FOB value — freight and insurance are excluded from the VAT
+  // base (they are still part of landed cost below). Verify with the clearing agent.
+  const customsValue = input.fob;
 
-  // VAT = vatRate x ((1 + uplift) x customsValue + duty)
+  // VAT = vatRate x ((1 + uplift) x FOB + duty)
   const uplifted = scale(customsValue, 1 + rates.vatUpliftRate);
   const vat = scale(add(uplifted, duty), rates.vatRate);
 
