@@ -32,6 +32,8 @@ interface MockStore {
   requests: Row[];
   order_lines: Row[];
   agent_runs: Row[];
+  // --- Phase 0.5 feature tables ---
+  magic_link_tokens: Row[];
 }
 
 /** Typed shapes for the fitment-engine tables the pipeline reads (see lib/fitment). */
@@ -170,6 +172,7 @@ function seed(): MockStore {
     requests: [],
     order_lines: [],
     agent_runs: [],
+    magic_link_tokens: [],
   };
 }
 
@@ -506,4 +509,54 @@ export function listAgentRuns(orderId: string): AgentRunRow[] {
   return (store().agent_runs as AgentRunRow[])
     .filter((r) => r.order_id === orderId)
     .sort((a, b) => b.created_at.localeCompare(a.created_at));
+}
+
+// ---------------------------------------------------------------------------
+// Magic-link tokens (Phase 0.5). Only the token HASH is stored; see lib/magic-link.ts
+// and packages/shared/src/magicLink.ts. Single-use is enforced via used_at.
+// ---------------------------------------------------------------------------
+
+export type MagicLinkRow = {
+  id: string;
+  org_id: string;
+  order_id: string;
+  page_type: string;
+  token_hash: string;
+  expires_at: string;
+  used_at: string | null;
+  created_by: string | null;
+  created_at: string;
+};
+
+export function insertMagicLinkToken(input: {
+  orgId: string;
+  orderId: string;
+  pageType: string;
+  tokenHash: string;
+  expiresAt: string;
+  createdBy?: string | null;
+}): void {
+  store().magic_link_tokens.push({
+    id: crypto.randomUUID(),
+    org_id: input.orgId,
+    order_id: input.orderId,
+    page_type: input.pageType,
+    token_hash: input.tokenHash,
+    expires_at: input.expiresAt,
+    used_at: null,
+    created_by: input.createdBy ?? null,
+    created_at: new Date().toISOString(),
+  });
+}
+
+export function findMagicLinkToken(tokenHash: string): MagicLinkRow | undefined {
+  return (store().magic_link_tokens as MagicLinkRow[]).find((r) => r.token_hash === tokenHash);
+}
+
+/** Mark a token used (single-use). Returns false if it was already used or not found. */
+export function markMagicLinkTokenUsed(tokenHash: string): boolean {
+  const row = (store().magic_link_tokens as MagicLinkRow[]).find((r) => r.token_hash === tokenHash);
+  if (!row || row.used_at) return false;
+  row.used_at = new Date().toISOString();
+  return true;
 }
