@@ -19,7 +19,7 @@ function gate(request: NextRequest, response: NextResponse, authed: boolean): Ne
   }
   if (authed && pathname === "/login") {
     const url = request.nextUrl.clone();
-    url.pathname = "/orders";
+    url.pathname = "/dashboard";
     return NextResponse.redirect(url);
   }
   return response;

@@ -136,7 +136,6 @@ export default async function OpsPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Agent</TableHead>
-                  <TableHead>Model</TableHead>
                   <TableHead>Outcome</TableHead>
                   <TableHead>Latency</TableHead>
                   <TableHead>Tokens</TableHead>
@@ -147,7 +146,6 @@ export default async function OpsPage() {
                 {runs.slice(0, 20).map((r) => (
                   <TableRow key={r.id}>
                     <TableCell className="font-medium">{r.agent}</TableCell>
-                    <TableCell className="text-xs text-muted-foreground">{r.model}</TableCell>
                     <TableCell>
                       <Badge variant={outcomeVariant(r.outcome)}>{r.outcome}</Badge>
                     </TableCell>

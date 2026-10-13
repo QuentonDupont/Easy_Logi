@@ -22,6 +22,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { StatusControl } from "@/components/status-control";
+import { StatusJourney } from "@/components/status-journey";
 
 export const dynamic = "force-dynamic";
 
@@ -62,6 +63,8 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
         <Badge variant={statusBadgeVariant(current)}>{statusLabel(current)}</Badge>
       </div>
       {order.summary && <p className="text-muted-foreground">{order.summary}</p>}
+
+      <StatusJourney status={current} />
 
       <div className="grid gap-6 md:grid-cols-[1fr_320px]">
         <Card>

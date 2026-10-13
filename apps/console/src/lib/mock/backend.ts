@@ -604,6 +604,21 @@ export function listAllEvents(): EventRow[] {
   return store().events as EventRow[];
 }
 
+export type OrderRow = {
+  id: string;
+  org_id: string;
+  reference: string;
+  status: string;
+  summary: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+/** All orders, newest first (for the dashboard overview). */
+export function listAllOrders(): OrderRow[] {
+  return [...(store().orders as OrderRow[])].sort((a, b) => b.created_at.localeCompare(a.created_at));
+}
+
 // ---------------------------------------------------------------------------
 // Magic-link tokens (Phase 0.5). Only the token HASH is stored; see lib/magic-link.ts
 // and packages/shared/src/magicLink.ts. Single-use is enforced via used_at.
