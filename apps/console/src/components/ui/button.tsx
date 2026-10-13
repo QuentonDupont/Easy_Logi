@@ -7,17 +7,19 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
+        // Manifest §3: primary = signal-deep fill; secondary/outline = 1px ink border, ink text;
+        // ghost = line border.
         default: "bg-primary text-primary-foreground hover:bg-primary/90",
         destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-        outline: "border border-input bg-background hover:bg-muted",
-        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        ghost: "hover:bg-muted",
+        outline: "border border-ink bg-background text-foreground hover:bg-muted",
+        secondary: "border border-ink bg-background text-foreground hover:bg-muted",
+        ghost: "border border-border bg-transparent hover:bg-muted",
       },
       size: {
-        default: "h-9 px-4 py-2",
-        sm: "h-8 rounded-md px-3 text-xs",
-        lg: "h-10 rounded-md px-6",
-        icon: "h-9 w-9",
+        default: "h-11 px-4 py-2",
+        sm: "h-9 rounded-md px-3 text-xs",
+        lg: "h-12 rounded-md px-6 text-base",
+        icon: "h-11 w-11",
       },
     },
     defaultVariants: { variant: "default", size: "default" },

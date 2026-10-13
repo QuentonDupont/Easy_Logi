@@ -1,60 +1,10 @@
+@import "@easy-logi/ui/tokens.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
-  :root {
-    /* Easy Logi palette — cool workshop paper + deep petrol ink + "cleared" emerald + hi-vis amber */
-    --font-display: "Archivo", ui-sans-serif, system-ui, sans-serif;
-    --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
-    --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", monospace;
-
-    --background: 195 16% 96%;
-    --foreground: 202 38% 12%;
-    --card: 0 0% 100%;
-    --card-foreground: 202 38% 12%;
-    --primary: 161 66% 28%;
-    --primary-foreground: 150 30% 97%;
-    --secondary: 195 14% 91%;
-    --secondary-foreground: 202 38% 16%;
-    --muted: 195 14% 92%;
-    --muted-foreground: 200 10% 40%;
-    --destructive: 6 58% 47%;
-    --destructive-foreground: 20 30% 97%;
-    --success: 161 66% 28%;
-    --success-foreground: 150 30% 97%;
-    --warning: 38 80% 44%;
-    --warning-foreground: 40 60% 10%;
-    --border: 195 14% 87%;
-    --input: 195 14% 87%;
-    --ring: 161 66% 28%;
-    --radius: 0.375rem;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --background: 202 32% 9%;
-      --foreground: 160 14% 92%;
-      --card: 202 28% 12%;
-      --card-foreground: 160 14% 92%;
-      --primary: 161 52% 45%;
-      --primary-foreground: 202 42% 8%;
-      --secondary: 202 22% 18%;
-      --secondary-foreground: 160 14% 92%;
-      --muted: 202 22% 18%;
-      --muted-foreground: 195 12% 62%;
-      --destructive: 6 55% 56%;
-      --destructive-foreground: 20 30% 97%;
-      --success: 161 52% 47%;
-      --success-foreground: 202 42% 8%;
-      --warning: 38 74% 56%;
-      --warning-foreground: 40 60% 10%;
-      --border: 202 20% 22%;
-      --input: 202 20% 22%;
-      --ring: 161 52% 47%;
-    }
-  }
-
   * {
     border-color: hsl(var(--border));
   }
@@ -63,12 +13,21 @@
     color: hsl(var(--foreground));
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
   }
+  /* Manifest: IBM Plex Sans carries both headings and UI — no separate display face. */
   h1,
   h2,
   h3,
   .font-display {
-    font-family: var(--font-display);
-    letter-spacing: -0.01em;
+    font-family: var(--font-sans);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+  /* Part numbers, order refs, prices, dates, KPIs are monospace. */
+  .font-mono,
+  code,
+  kbd {
+    font-family: var(--font-mono);
   }
 }

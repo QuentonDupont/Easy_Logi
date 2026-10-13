@@ -4,8 +4,8 @@ import type { OrderStatus } from "@easy-logi/shared";
 import { getCurrentProfile } from "@/lib/auth";
 import { listAllOrders, listAllAgentRuns, listAllEvents } from "@/lib/mock/backend";
 import { needsHumanRuns, needsHumanEvents } from "@/lib/ops/health";
-import { ORDER_PHASES, statusLabel, statusBadgeVariant, isOutOfBand } from "@/lib/status";
-import { Badge } from "@/components/ui/badge";
+import { StatusPill } from "@easy-logi/ui";
+import { ORDER_PHASES, isOutOfBand } from "@/lib/status";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -92,7 +92,7 @@ export default async function DashboardPage() {
                 <span className="w-32 shrink-0 text-sm text-muted-foreground">{p.label}</span>
                 <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
                   <div
-                    className="h-full rounded-full bg-primary"
+                    className="h-full rounded-full bg-signal"
                     style={{ width: `${(p.count / maxPhase) * 100}%` }}
                   />
                 </div>
@@ -126,9 +126,7 @@ export default async function DashboardPage() {
                   className="flex items-center justify-between gap-3 rounded-md px-2 py-1.5 hover:bg-muted"
                 >
                   <span className="truncate font-mono text-xs font-medium">{o.reference}</span>
-                  <Badge variant={statusBadgeVariant(o.status as OrderStatus)}>
-                    {statusLabel(o.status as OrderStatus)}
-                  </Badge>
+                  <StatusPill status={o.status as OrderStatus} />
                 </Link>
               ))
             )}

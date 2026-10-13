@@ -1,10 +1,9 @@
 import type { OrderStatus } from "@easy-logi/shared";
+import { StatusPill } from "@easy-logi/ui";
 import { verifyMagicLink } from "@/lib/magic-link";
 import { getOrderById } from "@/lib/mock/backend";
 import { PublicHeader } from "@/components/public-header";
 import { StatusJourney } from "@/components/status-journey";
-import { statusLabel, statusBadgeVariant } from "@/lib/status";
-import { Badge } from "@/components/ui/badge";
 
 export const dynamic = "force-dynamic";
 
@@ -49,7 +48,7 @@ export default async function TrackPage({ params }: { params: Promise<{ token: s
       <p className="text-sm text-muted-foreground">Your order</p>
       <div className="mt-1 flex flex-wrap items-center gap-3">
         <h1 className="font-display text-2xl font-bold tracking-tight">{order.reference}</h1>
-        <Badge variant={statusBadgeVariant(status)}>{statusLabel(status)}</Badge>
+        <StatusPill status={status} />
       </div>
       {order.summary && <p className="mt-2 text-muted-foreground">{order.summary}</p>}
 
