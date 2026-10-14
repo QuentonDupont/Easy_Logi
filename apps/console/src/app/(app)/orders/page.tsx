@@ -1,19 +1,7 @@
-import Link from "next/link";
-import type { OrderStatus } from "@easy-logi/shared";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentProfile } from "@/lib/auth";
 import { getActiveOrgId } from "@/lib/org-actions";
-import { statusLabel, statusBadgeVariant } from "@/lib/status";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { OrdersTable, type OrderRow } from "@/components/orders-table";
 import { CreateOrderForm } from "@/components/create-order-form";
 
 export const dynamic = "force-dynamic";
@@ -48,52 +36,17 @@ export default async function OrdersPage() {
         <CreateOrderForm />
       </div>
 
-      <Card>
-        <CardContent className="p-0">
-          {error ? (
-            <p className="p-6 text-sm text-destructive">
-              Could not load orders: {error.message}
-            </p>
-          ) : !orders || orders.length === 0 ? (
-            <p className="p-6 text-sm text-muted-foreground">
-              No orders yet. Create your first one above.
-            </p>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Reference</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Summary</TableHead>
-                  <TableHead>Created</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {orders.map((o) => (
-                  <TableRow key={o.id}>
-                    <TableCell className="font-medium">
-                      <Link href={`/orders/${o.id}`} className="hover:underline">
-                        {o.reference}
-                      </Link>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={statusBadgeVariant(o.status as OrderStatus)}>
-                        {statusLabel(o.status as OrderStatus)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="max-w-sm truncate text-muted-foreground">
-                      {o.summary ?? "—"}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {new Date(o.created_at).toLocaleDateString()}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+      {error ? (
+        <p className="rounded-lg border border-border bg-card p-6 text-sm text-destructive">
+          Could not load orders: {error.message}
+        </p>
+      ) : !orders || orders.length === 0 ? (
+        <p className="rounded-lg border border-border bg-card p-6 text-sm text-muted-foreground">
+          No orders yet. Create your first one above.
+        </p>
+      ) : (
+        <OrdersTable orders={orders as OrderRow[]} />
+      )}
     </div>
   );
 }

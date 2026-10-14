@@ -27,6 +27,12 @@
       "@easy-logi/shared/*": [
         "../../packages/shared/src/*"
       ],
+      "@easy-logi/ui": [
+        "../../packages/ui/src/index.ts"
+      ],
+      "@easy-logi/ui/*": [
+        "../../packages/ui/src/*"
+      ],
       "@easy-logi/agent-runtime": [
         "../../packages/agent-runtime/src/index.ts"
       ],

@@ -1,0 +1,70 @@
+/**
+ * Easy Logi design tokens — the "Manifest" brand system.
+ * One dark ink, one signal colour, lots of white space, numbers in monospace.
+ *
+ * Raw brand tokens are HEX (what the brand board shows). The shadcn/ui aliases
+ * that the component primitives read are expressed as HSL channels so Tailwind's
+ * `hsl(var(--x))` and opacity modifiers keep working.
+ *
+ * No other colours belong in product UI.
+ */
+
+:root {
+  /* --- raw brand tokens (hex) --- */
+  --el-ink: #0b1f33; /* text, headers, dark surfaces, sidebar */
+  --el-ink-2: #1a3350; /* selected nav item on ink */
+  --el-signal: #e8590c; /* logo dot, progress, small highlights — decoration only */
+  --el-signal-deep: #c2410c; /* primary CTA fill (white text), needs action */
+  --el-signal-tint: #fff6f0; /* value / best-value callouts */
+  --el-signal-border: #f5c9ae; /* hairline around signal-tint callouts */
+  --el-steel: #4a5a6a; /* secondary text, captions, table headers */
+  --el-mist: #f4f6f8; /* page background */
+  --el-line: #d8dee4; /* borders, dividers */
+  --el-line-soft: #eef1f4; /* table row dividers, neutral pills */
+  --el-surface: #ffffff; /* cards, tables, inputs */
+  --el-transit: #1d5fa8; /* in transit / at port */
+  --el-cleared: #1f7a4d; /* cleared, delivered, fit confirmed */
+  --el-cleared-tint: #e6f2ec; /* verified-fit chip background */
+  --el-on-ink: #ffffff; /* text on ink */
+  --el-on-ink-muted: #c9d3dd; /* secondary text on ink */
+
+  /* --- shadcn/ui aliases (HSL channels) --- */
+  /* The IBM Plex families are loaded via next/font/google, which supplies these two
+     variables. The literal family names remain as a fallback for any consumer that
+     has not wired next/font yet. */
+  --font-sans: var(--font-ibm-plex-sans), "IBM Plex Sans", "Helvetica Neue", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-ibm-plex-mono), "IBM Plex Mono", ui-monospace, "SFMono-Regular", monospace;
+
+  --background: 210 20% 96%; /* mist */
+  --foreground: 210 65% 12%; /* ink */
+  --card: 0 0% 100%; /* surface */
+  --card-foreground: 210 65% 12%;
+  --primary: 18 88% 40%; /* signal-deep — CTA */
+  --primary-foreground: 0 0% 100%;
+  --secondary: 210 18% 94%; /* line-soft */
+  --secondary-foreground: 210 65% 12%;
+  --muted: 210 18% 94%;
+  --muted-foreground: 210 18% 35%; /* steel */
+  --accent: 210 18% 94%;
+  --accent-foreground: 210 65% 12%;
+  --destructive: 0 56% 46%;
+  --destructive-foreground: 0 0% 100%;
+  --success: 150 60% 30%; /* cleared */
+  --success-foreground: 0 0% 100%;
+  --warning: 18 88% 40%; /* signal-deep (no amber in the Manifest; "needs action" is signal) */
+  --warning-foreground: 0 0% 100%;
+  --transit: 211 71% 39%;
+  --transit-foreground: 0 0% 100%;
+  --ink: 210 65% 12%;
+  --ink-2: 212 51% 21%;
+  --signal: 21 90% 48%;
+  --signal-tint: 24 100% 97%;
+  --cleared-tint: 150 30% 93%;
+  --on-ink-muted: 210 24% 83%;
+  --border: 210 16% 87%; /* line */
+  --border-soft: 210 18% 94%; /* line-soft */
+  --input: 210 16% 87%;
+  --ring: 18 88% 40%;
+  --radius: 0.5rem; /* 8px — inputs, buttons, pills */
+  --radius-card: 0.75rem; /* 12px — cards, tables */
+}
