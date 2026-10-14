@@ -21,7 +21,6 @@ import {
   EASY_LOGI_FEE,
   SZ_VALUE_BASIS,
 } from "@easy-logi/import-planner/rules";
-import { PublicHeader } from "@/components/public-header";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -66,9 +65,7 @@ export default async function PlannerPage({ searchParams }: { searchParams: Prom
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <PublicHeader />
-      <main className="mx-auto max-w-5xl px-5 py-10 space-y-8">
+    <div className="space-y-8">
         <div className="space-y-1">
           <h1 className="text-3xl font-semibold tracking-[-0.02em]">Import planner</h1>
           <p className="text-muted-foreground">
@@ -122,7 +119,6 @@ export default async function PlannerPage({ searchParams }: { searchParams: Prom
           Every figure here is an <strong>estimate, not a quote</strong>, built from dated rule data that is not yet
           verified. Confirm duties, permits, freight and fit with your clearing agent before you commit.
         </p>
-      </main>
     </div>
   );
 }

@@ -15,7 +15,6 @@ function gate(request: NextRequest, response: NextResponse, authed: boolean): Ne
     pathname.startsWith("/track") || // buyer order tracking (magic link)
     pathname.startsWith("/quote") || // supplier quote submission (magic link)
     pathname.startsWith("/purchase") || // buyer purchase page (public / magic link)
-    pathname.startsWith("/planner") || // public import planner (no login)
     pathname === "/favicon.ico";
 
   if (!authed && !isPublic) {

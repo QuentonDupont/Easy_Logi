@@ -47,7 +47,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <div className="flex min-h-screen bg-background">
       {/* Sidebar — desktop (Ink) */}
-      <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col bg-ink text-white md:flex">
+      <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col bg-ink text-white md:flex print:hidden">
         <div className="flex h-16 items-center px-5">
           <Link href="/dashboard" aria-label="Easy Logi — dashboard">
             <Logo size={28} variant="light" />
@@ -69,7 +69,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
       {/* Main column */}
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-10 flex h-16 items-center justify-between gap-3 border-b bg-card/90 px-4 backdrop-blur md:px-8">
+        <header className="sticky top-0 z-10 flex h-16 items-center justify-between gap-3 border-b bg-card/90 px-4 backdrop-blur md:px-8 print:hidden">
           <Link href="/dashboard" className="md:hidden" aria-label="Easy Logi — dashboard">
             <Logo size={24} variant="dark" />
           </Link>
@@ -85,7 +85,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </header>
 
         {/* Nav — mobile (Ink strip) */}
-        <div className="bg-ink px-2 py-2 md:hidden">
+        <div className="bg-ink px-2 py-2 md:hidden print:hidden">
           <SidebarNav isOps={isOps} orientation="horizontal" badges={badges} />
         </div>
 

@@ -24,6 +24,7 @@ import {
 import { StatusControl } from "@/components/status-control";
 import { StatusJourney } from "@/components/status-journey";
 import { ShareLinks } from "@/components/share-links";
+import { StatusSummaryCard, DocumentsPanel } from "@/components/order-documents";
 
 export const dynamic = "force-dynamic";
 
@@ -67,6 +68,10 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
       {order.summary && <p className="text-muted-foreground">{order.summary}</p>}
 
       <StatusJourney status={current} />
+
+      <StatusSummaryCard status={current} />
+
+      <DocumentsPanel orderId={order.id} status={current} />
 
       <div className="grid gap-6 md:grid-cols-[1fr_320px]">
         <Card>
