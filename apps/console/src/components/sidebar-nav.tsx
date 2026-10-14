@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, ClipboardList, Wrench, UploadCloud, Activity } from "lucide-react";
+import { LayoutDashboard, ClipboardList, Wrench, PackageSearch, UploadCloud, Activity } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type Item = { href: string; label: string; icon: typeof LayoutDashboard; ops: boolean; badgeKey?: string };
@@ -10,8 +10,9 @@ type Item = { href: string; label: string; icon: typeof LayoutDashboard; ops: bo
 const ITEMS: Item[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, ops: false },
   { href: "/orders", label: "Orders", icon: ClipboardList, ops: false },
+  { href: "/catalogue", label: "Parts catalogue", icon: PackageSearch, ops: false },
   { href: "/fitment", label: "Fitment queue", icon: Wrench, ops: false, badgeKey: "fitment" },
-  { href: "/ingest", label: "Catalogue", icon: UploadCloud, ops: true },
+  { href: "/ingest", label: "Catalogue import", icon: UploadCloud, ops: true },
   { href: "/ops", label: "Ops health", icon: Activity, ops: true, badgeKey: "ops" },
 ];
 
