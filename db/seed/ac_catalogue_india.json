@@ -1,0 +1,109 @@
+{
+  "_note": "Curated India vehicle-A/C suppliers (bus/truck/tractor). Seeded verified=false — product ranges, prices and export terms must be confirmed with each supplier by RFQ. Sources are company/trade-press pages, not live price feeds.",
+  "suppliers": [
+    {
+      "id": "ac-sup-in-subros", "name": "Subros Limited", "brand": "Subros", "country": "IN",
+      "location": "Noida, Uttar Pradesh", "business_type": "Manufacturer",
+      "segments": ["bus", "truck", "van", "tractor"],
+      "main_products": "Integrated thermal products — compressors, condensers, heat exchangers for passenger vehicles, buses, trucks and refrigerated transport",
+      "website": "https://www.subros.com/", "storefront_url": "", "price_band": "Request at RFQ", "verified": false
+    },
+    {
+      "id": "ac-sup-in-sidwal", "name": "Sidwal Refrigeration Industries Pvt. Ltd.", "brand": "Sidwal", "country": "IN",
+      "location": "New Delhi", "business_type": "Manufacturer",
+      "segments": ["bus", "truck"],
+      "main_products": "Bus air-conditioning systems (rail, metro and road), roof-mounted bus A/C",
+      "website": "https://www.sidwal.com/", "storefront_url": "", "price_band": "Request at RFQ", "verified": false
+    },
+    {
+      "id": "ac-sup-in-kbautotech", "name": "KB AutoTech (India)", "brand": "KB AutoTech", "country": "IN",
+      "location": "Chennai, Tamil Nadu", "business_type": "Manufacturer",
+      "segments": ["bus", "truck"],
+      "main_products": "Roof-top bus A/C systems and compressors; OE supplier to Tata Motors, Ashok Leyland, Daimler India",
+      "website": "", "storefront_url": "", "price_band": "Request at RFQ", "verified": false
+    },
+    {
+      "id": "ac-sup-in-transacnr", "name": "Trans ACNR Solutions Pvt. Ltd.", "brand": "Trans ACNR", "country": "IN",
+      "location": "New Delhi", "business_type": "Manufacturer / supplier",
+      "segments": ["bus", "truck"],
+      "main_products": "Bus air-conditioning and truck transport-refrigeration / cold-chain systems",
+      "website": "https://www.transacnr.com/", "storefront_url": "", "price_band": "Request at RFQ", "verified": false
+    },
+    {
+      "id": "ac-sup-in-haiger", "name": "Haiger Refrigeration (India)", "brand": "Haiger", "country": "IN",
+      "location": "Baddi, Himachal Pradesh", "business_type": "Manufacturer",
+      "segments": ["bus", "minibus"],
+      "main_products": "Bus A/C systems (Indian arm of a Chinese maker; exports to Africa, UAE, SE Asia)",
+      "website": "", "storefront_url": "", "price_band": "Request at RFQ", "verified": false
+    },
+    {
+      "id": "ac-sup-in-tcci", "name": "T/CCI Manufacturing (India)", "brand": "T/CCI", "country": "IN",
+      "location": "Noida, Uttar Pradesh", "business_type": "Manufacturer (compressors)",
+      "segments": ["truck", "bus", "construction"],
+      "main_products": "5H and 7H wobble-plate A/C compressors for heavy-duty truck, construction and bus",
+      "website": "https://www.tccimfg.com/", "storefront_url": "", "price_band": "Request at RFQ", "verified": false
+    }
+  ],
+  "listings": [
+    {
+      "id": "ac-in-subros-bus-rooftop", "title": "Subros roof-mounted bus air-conditioning system",
+      "category": "unit", "segments": ["bus"], "country": "IN", "supplier_id": "ac-sup-in-subros", "brand": "Subros",
+      "price_low": null, "price_high": null, "currency": "USD", "price_is_placeholder": false,
+      "spec_summary": "Integrated roof-mounted bus A/C; compressor + condenser + evaporator from Subros' own thermal line. Capacity by bus length — confirm per model.",
+      "hs_code": "84152000", "gross_weight_kg": null, "image_url": null,
+      "source_url": "https://www.subros.com/", "source_name": "Subros", "as_of": "2026-10-14", "verified": false
+    },
+    {
+      "id": "ac-in-subros-compressor", "title": "Subros A/C compressor (truck / bus / refrigerated transport)",
+      "category": "compressor", "segments": ["truck", "bus"], "country": "IN", "supplier_id": "ac-sup-in-subros", "brand": "Subros",
+      "price_low": null, "price_high": null, "currency": "USD", "price_is_placeholder": false,
+      "application": "Commercial vehicle A/C", "compressor_model": "Subros", "oem_crossrefs": [],
+      "spec_summary": "Compressor for CV and refrigerated-transport A/C — model and displacement by application; confirm by RFQ.",
+      "hs_code": "8414301390", "gross_weight_kg": null, "image_url": null,
+      "source_url": "https://www.subros.com/", "source_name": "Subros", "as_of": "2026-10-14", "verified": false
+    },
+    {
+      "id": "ac-in-sidwal-bus", "title": "Sidwal roof-mounted bus air conditioner",
+      "category": "unit", "segments": ["bus"], "country": "IN", "supplier_id": "ac-sup-in-sidwal", "brand": "Sidwal",
+      "price_low": null, "price_high": null, "currency": "USD", "price_is_placeholder": false,
+      "spec_summary": "Roof-mounted bus A/C; Sidwal states it does not import sub-assemblies from China. Capacity by bus length — confirm per model.",
+      "hs_code": "84152000", "gross_weight_kg": null, "image_url": null,
+      "source_url": "https://www.sidwal.com/", "source_name": "Sidwal", "as_of": "2026-10-14", "verified": false
+    },
+    {
+      "id": "ac-in-kbautotech-bus", "title": "KB AutoTech roof-top bus A/C system",
+      "category": "unit", "segments": ["bus"], "country": "IN", "supplier_id": "ac-sup-in-kbautotech", "brand": "KB AutoTech",
+      "price_low": null, "price_high": null, "currency": "USD", "price_is_placeholder": false,
+      "spec_summary": "Roof-top bus A/C with high localisation; compressors sourced from Korea. OE fitment to Tata / Ashok Leyland / BharatBenz — confirm aftermarket availability.",
+      "hs_code": "84152000", "gross_weight_kg": null, "image_url": null,
+      "source_url": "https://www.motorindiaonline.in/kb-autotechs-popular-range-of-bus-a-c-systems-compressors/",
+      "source_name": "Motor India (trade press)", "as_of": "2026-10-14", "verified": false
+    },
+    {
+      "id": "ac-in-transacnr-truck-reefer", "title": "Trans ACNR truck transport-refrigeration unit",
+      "category": "unit", "segments": ["truck"], "country": "IN", "supplier_id": "ac-sup-in-transacnr", "brand": "Trans ACNR",
+      "price_low": null, "price_high": null, "currency": "USD", "price_is_placeholder": false,
+      "spec_summary": "Truck transport-refrigeration / cold-chain unit; bus A/C also available. Represents Jingyi (CN) bus A/C and Hwa Sung Thermo (KR) reefer — confirm model.",
+      "hs_code": "84189910", "gross_weight_kg": null, "image_url": null,
+      "source_url": "https://www.transacnr.com/", "source_name": "Trans ACNR", "as_of": "2026-10-14", "verified": false
+    },
+    {
+      "id": "ac-in-haiger-bus", "title": "Haiger bus air-conditioning system",
+      "category": "unit", "segments": ["bus", "minibus"], "country": "IN", "supplier_id": "ac-sup-in-haiger", "brand": "Haiger",
+      "price_low": null, "price_high": null, "currency": "USD", "price_is_placeholder": false,
+      "spec_summary": "Bus A/C system; Indian arm of a Chinese maker with African / Middle-East export experience. Capacity by bus class — confirm per model.",
+      "hs_code": "84152000", "gross_weight_kg": null, "image_url": null,
+      "source_url": "https://www.motorindiaonline.in/haiger-commands-significant-share-of-bus-ac-market/",
+      "source_name": "Motor India (trade press)", "as_of": "2026-10-14", "verified": false
+    },
+    {
+      "id": "ac-in-tcci-5h", "title": "T/CCI 5H / 7H wobble-plate A/C compressor",
+      "category": "compressor", "segments": ["truck", "bus", "construction"], "country": "IN", "supplier_id": "ac-sup-in-tcci", "brand": "T/CCI",
+      "price_low": null, "price_high": null, "currency": "USD", "price_is_placeholder": false,
+      "application": "Heavy-duty truck / bus / construction A/C", "compressor_model": "5H / 7H wobble plate", "oem_crossrefs": [],
+      "spec_summary": "5H and 7H wobble-plate compressors for heavy-duty truck, construction and passenger bus; made in Noida.",
+      "hs_code": "8414301390", "gross_weight_kg": null, "image_url": null,
+      "source_url": "https://www.tccimfg.com/", "source_name": "T/CCI", "as_of": "2026-10-14", "verified": false
+    }
+  ]
+}
