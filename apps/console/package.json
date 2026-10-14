@@ -12,6 +12,7 @@
     "@anthropic-ai/sdk": "^0.133.0",
     "@easy-logi/agent-runtime": "workspace:*",
     "@easy-logi/agents": "workspace:*",
+    "@easy-logi/import-planner": "workspace:*",
     "@easy-logi/shared": "workspace:*",
     "@easy-logi/ui": "workspace:*",
     "@supabase/ssr": "^0.12.7",

@@ -33,6 +33,12 @@
       "@easy-logi/ui/*": [
         "../../packages/ui/src/*"
       ],
+      "@easy-logi/import-planner": [
+        "../../packages/import-planner/src/index.ts"
+      ],
+      "@easy-logi/import-planner/*": [
+        "../../packages/import-planner/src/*"
+      ],
       "@easy-logi/agent-runtime": [
         "../../packages/agent-runtime/src/index.ts"
       ],

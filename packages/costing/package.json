@@ -12,7 +12,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@easy-logi/shared": "workspace:*"
+    "@easy-logi/shared": "workspace:*",
+    "@easy-logi/import-planner": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.7.2"

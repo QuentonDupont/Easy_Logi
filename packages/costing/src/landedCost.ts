@@ -1,14 +1,13 @@
 import {
   type Money,
   type Currency,
-  add,
-  scale,
   sum,
   zero,
   fromMinor,
   MoneyError,
 } from "./money";
 import { allocateProportional } from "./allocate";
+import { importTaxes } from "@easy-logi/import-planner";
 
 /**
  * Duty/VAT rates as read from `rates_rules` (never hard-coded — CLAUDE.md rule 5).
@@ -79,16 +78,20 @@ export function lineLandedCost(input: LineCostInput, rates: RateSet): LineLanded
     }
   }
 
-  // duty on FOB
-  const duty = scale(input.fob, rates.dutyRate);
-
   // SA customs value for VAT is the FOB value — freight and insurance are excluded from the VAT
   // base (they are still part of landed cost below). Verify with the clearing agent.
   const customsValue = input.fob;
 
-  // VAT = vatRate x ((1 + uplift) x FOB + duty)
-  const uplifted = scale(customsValue, 1 + rates.vatUpliftRate);
-  const vat = scale(add(uplifted, duty), rates.vatRate);
+  // Duty + VAT come from the import-planner engine — the single source of truth for SA/SZ tax maths
+  // (duty = round(FOB x dutyRate); VAT = round(round(FOB x (1 + uplift)) + duty) x vatRate)).
+  const { dutyMinor, vatMinor } = importTaxes({
+    customsValueMinor: customsValue.minor,
+    dutyRate: rates.dutyRate,
+    vatRate: rates.vatRate,
+    vatUpliftRate: rates.vatUpliftRate,
+  });
+  const duty = fromMinor(dutyMinor, currency);
+  const vat = fromMinor(vatMinor, currency);
 
   const landed = sum([input.fob, freight, insurance, duty, vat, otherCharges], currency);
 

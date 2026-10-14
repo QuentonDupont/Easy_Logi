@@ -50,6 +50,9 @@ importers:
       '@easy-logi/agents':
         specifier: workspace:*
         version: link:../../services/agents
+      '@easy-logi/import-planner':
+        specifier: workspace:*
+        version: link:../../packages/import-planner
       '@easy-logi/shared':
         specifier: workspace:*
         version: link:../../packages/shared
@@ -132,6 +135,19 @@ importers:
         version: 5.9.3
 
   packages/costing:
+    dependencies:
+      '@easy-logi/import-planner':
+        specifier: workspace:*
+        version: link:../import-planner
+      '@easy-logi/shared':
+        specifier: workspace:*
+        version: link:../shared
+    devDependencies:
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+
+  packages/import-planner:
     dependencies:
       '@easy-logi/shared':
         specifier: workspace:*
