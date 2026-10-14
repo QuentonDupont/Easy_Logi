@@ -29,6 +29,14 @@ export default defineConfig({
         replacement: new URL("./packages/shared/src/index.ts", import.meta.url).pathname,
       },
       {
+        find: /^@easy-logi\/import-planner\/(.*)$/,
+        replacement: new URL("./packages/import-planner/src/$1", import.meta.url).pathname,
+      },
+      {
+        find: "@easy-logi/import-planner",
+        replacement: new URL("./packages/import-planner/src/index.ts", import.meta.url).pathname,
+      },
+      {
         find: "@easy-logi/costing",
         replacement: new URL("./packages/costing/src/index.ts", import.meta.url).pathname,
       },
