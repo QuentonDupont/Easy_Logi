@@ -2,39 +2,56 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, ClipboardList, PackageSearch, Calculator, Wrench, UploadCloud, Activity } from "lucide-react";
+import {
+  LayoutDashboard,
+  ClipboardList,
+  PackageSearch,
+  Calculator,
+  Wrench,
+  FolderCheck,
+  UploadCloud,
+  Activity,
+} from "lucide-react";
+import type { AccountKind } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 
-type Item = { href: string; label: string; icon: typeof LayoutDashboard; ops: boolean; badgeKey?: string };
+type Item = {
+  href: string;
+  /** Label per side; falls back to `default`. */
+  label: Partial<Record<AccountKind, string>> & { default: string };
+  icon: typeof LayoutDashboard;
+  /** Which sides of the platform see this item. */
+  for: AccountKind[];
+  badgeKey?: string;
+};
 
 const ITEMS: Item[] = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, ops: false },
-  { href: "/orders", label: "Orders", icon: ClipboardList, ops: false },
-  { href: "/catalogue", label: "Parts catalogue", icon: PackageSearch, ops: false },
-  { href: "/planner", label: "Import planner", icon: Calculator, ops: false },
-  { href: "/fitment", label: "Fitment queue", icon: Wrench, ops: false, badgeKey: "fitment" },
-  { href: "/ingest", label: "Catalogue import", icon: UploadCloud, ops: true },
-  { href: "/ops", label: "Ops health", icon: Activity, ops: true, badgeKey: "ops" },
+  { href: "/dashboard", label: { default: "Dashboard", individual: "Overview" }, icon: LayoutDashboard, for: ["business", "individual", "staff"] },
+  { href: "/orders", label: { default: "Orders", individual: "My orders" }, icon: ClipboardList, for: ["business", "individual", "staff"] },
+  { href: "/documents", label: { default: "Documents", business: "Company documents", individual: "My documents" }, icon: FolderCheck, for: ["business", "individual"] },
+  { href: "/catalogue", label: { default: "Parts catalogue" }, icon: PackageSearch, for: ["business", "staff"] },
+  { href: "/planner", label: { default: "Import planner" }, icon: Calculator, for: ["business", "staff"] },
+  { href: "/fitment", label: { default: "Fitment queue" }, icon: Wrench, for: ["business", "staff"], badgeKey: "fitment" },
+  { href: "/ingest", label: { default: "Catalogue import" }, icon: UploadCloud, for: ["staff"] },
+  { href: "/ops", label: { default: "Ops health" }, icon: Activity, for: ["staff"], badgeKey: "ops" },
 ];
 
 export function SidebarNav({
-  isOps,
+  kind,
   orientation = "vertical",
   badges = {},
 }: {
-  isOps: boolean;
+  kind: AccountKind;
   orientation?: "vertical" | "horizontal";
   badges?: Record<string, number>;
 }) {
   const pathname = usePathname();
-  const items = ITEMS.filter((i) => !i.ops || isOps);
+  const items = ITEMS.filter((i) => i.for.includes(kind));
 
   return (
     <nav
       aria-label="Console"
-      className={cn(
-        orientation === "vertical" ? "flex flex-col gap-0.5" : "flex gap-1 overflow-x-auto",
-      )}
+      className={cn(orientation === "vertical" ? "flex flex-col gap-0.5" : "flex gap-1 overflow-x-auto")}
     >
       {items.map(({ href, label, icon: Icon, badgeKey }) => {
         const active = pathname === href || pathname.startsWith(`${href}/`);
@@ -53,7 +70,7 @@ export function SidebarNav({
             )}
           >
             <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
-            <span className="flex-1">{label}</span>
+            <span className="flex-1">{label[kind] ?? label.default}</span>
             {count > 0 && (
               <span className="rounded-full bg-signal px-2 py-0.5 text-xs font-bold text-ink">
                 {count}

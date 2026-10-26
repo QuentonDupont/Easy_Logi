@@ -12,6 +12,7 @@ import type { CatalogCategory, CatalogCountry } from "@/lib/catalog/types";
 import { CatalogImage } from "@/components/catalog-image";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { requireKind } from "@/lib/guards";
 
 export const dynamic = "force-dynamic";
 
@@ -22,6 +23,7 @@ type SP = Record<string, string | string[] | undefined>;
 const first = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) ?? "";
 
 export default async function CataloguePage({ searchParams }: { searchParams: Promise<SP> }) {
+  await requireKind(["business", "staff"]);
   const sp = await searchParams;
   const filters: CatalogFilters = {
     q: first(sp.q),

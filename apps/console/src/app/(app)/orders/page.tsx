@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { getCurrentProfile } from "@/lib/auth";
+import { accountKind, getCurrentProfile } from "@/lib/auth";
 import { getActiveOrgId } from "@/lib/org-actions";
 import { OrdersTable, type OrderRow } from "@/components/orders-table";
 import { CreateOrderForm } from "@/components/create-order-form";
@@ -23,17 +23,27 @@ export default async function OrdersPage() {
   }
 
   const { data: orders, error } = await query;
+  const isIndividual = profile ? accountKind(profile) === "individual" : false;
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-          <h1 className="text-2xl font-semibold">Orders</h1>
+          <h1 className="text-2xl font-semibold">{isIndividual ? "My orders" : "Orders"}</h1>
           <p className="text-sm text-muted-foreground">
-            Every order moves through its lifecycle via the status machine.
+            {isIndividual
+              ? "Open an order to see where it is and which documents it needs from you."
+              : "Every order moves through its lifecycle via the status machine."}
           </p>
         </div>
-        <CreateOrderForm />
+        {isIndividual ? (
+          <CreateOrderForm
+            buttonLabel="Request a part"
+            placeholder="Part + vehicle, e.g. front brake pads, Polo Vivo 2017"
+          />
+        ) : (
+          <CreateOrderForm />
+        )}
       </div>
 
       {error ? (

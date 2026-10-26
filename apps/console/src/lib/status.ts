@@ -5,11 +5,14 @@ import {
   type Role,
 } from "@easy-logi/shared";
 
+/** Words that read as acronyms in a status label (po_issued → "PO Issued"). */
+const ACRONYMS: Record<string, string> = { po: "PO", rfq: "RFQ", qc: "QC" };
+
 /** Human-readable label for a status. */
 export function statusLabel(status: OrderStatus): string {
   return status
     .split("_")
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .map((w) => ACRONYMS[w] ?? w.charAt(0).toUpperCase() + w.slice(1))
     .join(" ");
 }
 

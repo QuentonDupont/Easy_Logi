@@ -30,6 +30,11 @@ export function hasSupabaseConfig(): boolean {
   return Boolean(publicEnv.supabaseUrl && publicEnv.supabaseAnonKey);
 }
 
+/** Server-only: the service-role key, used solely for the audited status-change RPC. */
+export function requireServiceRoleKey(): string {
+  return required("SUPABASE_SERVICE_ROLE_KEY", process.env.SUPABASE_SERVICE_ROLE_KEY);
+}
+
 export function requirePublicEnv(): { supabaseUrl: string; supabaseAnonKey: string } {
   return {
     supabaseUrl: required("NEXT_PUBLIC_SUPABASE_URL", publicEnv.supabaseUrl),

@@ -4,7 +4,9 @@ import { statusLabel, statusBadgeVariant, nextStatusOptions } from "./status";
 describe("statusLabel", () => {
   it("humanises snake_case statuses", () => {
     expect(statusLabel("fitment_in_progress")).toBe("Fitment In Progress");
-    expect(statusLabel("po_issued")).toBe("Po Issued");
+    expect(statusLabel("po_issued")).toBe("PO Issued");
+    expect(statusLabel("rfq_sent")).toBe("RFQ Sent");
+    expect(statusLabel("qc_pending")).toBe("QC Pending");
   });
 });
 

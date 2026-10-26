@@ -23,6 +23,7 @@ import {
 } from "@easy-logi/import-planner/rules";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { requireKind } from "@/lib/guards";
 
 export const dynamic = "force-dynamic";
 
@@ -43,6 +44,7 @@ function money(usd: number): string {
 }
 
 export default async function PlannerPage({ searchParams }: { searchParams: Promise<SP> }) {
+  await requireKind(["business", "staff"]);
   const sp = await searchParams;
   const submitted = first(sp.value) !== "";
 

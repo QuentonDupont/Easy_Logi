@@ -53,9 +53,10 @@ const TONE_CLASS: Record<PillTone, string> = {
 
 /** Title Case label derived from a snake_case status (e.g. `at_port_durban` → `At Port Durban`). */
 export function statusLabel(status: OrderStatus): string {
+  const acronyms: Record<string, string> = { po: "PO", rfq: "RFQ", qc: "QC" };
   return status
     .split("_")
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .map((w) => acronyms[w] ?? w.charAt(0).toUpperCase() + w.slice(1))
     .join(" ");
 }
 
