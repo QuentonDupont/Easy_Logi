@@ -6,4 +6,5 @@ export type {
   OrderStatusEnum,
   UserRoleEnum,
   CountryEnum,
+  AccountTypeEnum,
 } from "./database.types";

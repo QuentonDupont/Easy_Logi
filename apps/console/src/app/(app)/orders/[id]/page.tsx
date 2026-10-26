@@ -21,10 +21,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { StatusControl } from "@/components/status-control";
+import { StatusControl, type MoveOption } from "@/components/status-control";
 import { StatusJourney } from "@/components/status-journey";
 import { ShareLinks } from "@/components/share-links";
 import { StatusSummaryCard, DocumentsPanel } from "@/components/order-documents";
+import { statusContent } from "@/lib/documents/content";
+import { statusDocs } from "@/lib/documents/requirements";
+import { DOC_TITLES } from "@/lib/documents/templates";
+import { isForwardMove, requiredForMove, resumeFromHistory } from "@/lib/documents/gate";
+import { accountInfo, documentsForOrder } from "@/lib/documents/store";
 
 export const dynamic = "force-dynamic";
 
@@ -35,7 +40,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
 
   const { data: order } = await supabase
     .from("orders")
-    .select("id, reference, status, summary, created_at, updated_at")
+    .select("id, org_id, reference, status, summary, created_at, updated_at")
     .eq("id", id)
     .maybeSingle();
 
@@ -49,8 +54,33 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
 
   const current = order.status as OrderStatus;
   const role = profile ? toConsoleRole(profile.role) : "importer";
-  const options = nextStatusOptions(current, role);
   const isOps = profile?.role === "ops_admin";
+
+  // Documents are judged by the ORDER's account (business vs individual), not the viewer's.
+  const account = accountInfo(order.org_id as string);
+  const docs = documentsForOrder(order.org_id as string, order.id);
+  const uploaded = new Set(docs.map((d) => d.doc_key));
+
+  // For a paused (on hold / disputed) order, moves are judged from the status it was paused at.
+  const resumeFrom = resumeFromHistory((history ?? []) as Array<{ from_status: string; to_status: string }>);
+
+  const moveOptions: MoveOption[] = nextStatusOptions(current, role).map((to) => {
+    const next = statusDocs(to, account.accountType);
+    return {
+      to,
+      label: statusLabel(to),
+      gated: isForwardMove(current, to, resumeFrom),
+      checklist: requiredForMove(current, to, account.accountType, resumeFrom).map((u) => ({
+        key: u.key,
+        label: u.label,
+        present: uploaded.has(u.key),
+        uploader: u.uploader,
+      })),
+      nextSummary: statusContent(to).summary,
+      nextNeeds: next.uploads.filter((u) => u.required).map((u) => u.label),
+      nextDownloads: next.downloads.map((d) => DOC_TITLES[d]),
+    };
+  });
 
   return (
     <div className="space-y-6">
@@ -58,12 +88,17 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
         href="/orders"
         className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
       >
-        <ArrowLeft className="h-4 w-4" /> Orders
+        <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Orders
       </Link>
 
       <div className="flex flex-wrap items-center gap-3">
         <h1 className="text-2xl font-semibold">{order.reference}</h1>
         <Badge variant={statusBadgeVariant(current)}>{statusLabel(current)}</Badge>
+        {isOps && (
+          <span className="rounded-full bg-border-soft px-2.5 py-0.5 text-xs font-medium">
+            {account.name} · {account.accountType === "individual" ? "Personal" : "Business"}
+          </span>
+        )}
       </div>
       {order.summary && <p className="text-muted-foreground">{order.summary}</p>}
 
@@ -71,7 +106,13 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
 
       <StatusSummaryCard status={current} />
 
-      <DocumentsPanel orderId={order.id} status={current} />
+      <DocumentsPanel
+        orderId={order.id}
+        status={current}
+        accountType={account.accountType}
+        docs={docs}
+        isOps={isOps}
+      />
 
       <div className="grid gap-6 md:grid-cols-[1fr_320px]">
         <Card>
@@ -119,10 +160,15 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
           <Card>
             <CardHeader>
               <CardTitle>Change status</CardTitle>
-              <CardDescription>Only valid transitions are offered.</CardDescription>
+              <CardDescription>Only valid moves are offered; forward moves need the step&apos;s documents.</CardDescription>
             </CardHeader>
             <CardContent>
-              <StatusControl orderId={order.id} options={options} />
+              <StatusControl
+                orderId={order.id}
+                currentLabel={statusLabel(current)}
+                options={moveOptions}
+                isOps={isOps}
+              />
             </CardContent>
           </Card>
 

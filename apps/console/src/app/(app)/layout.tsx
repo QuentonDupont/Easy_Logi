@@ -1,9 +1,9 @@
 import Link from "next/link";
 import type { OrderStatus } from "@easy-logi/shared";
 import { Logo } from "@easy-logi/ui";
-import { getCurrentProfile } from "@/lib/auth";
+import { accountKind, getCurrentProfile } from "@/lib/auth";
 import { getAccessibleOrgs, getActiveOrgId } from "@/lib/org-actions";
-import { listAllOrders, listAllAgentRuns, listAllEvents } from "@/lib/mock/backend";
+import { listAllOrders, listAllAgentRuns, listAllEvents, listOrdersForOrg } from "@/lib/mock/backend";
 import { needsHumanRuns, needsHumanEvents } from "@/lib/ops/health";
 import { OrgSwitcher } from "@/components/org-switcher";
 import { SidebarNav } from "@/components/sidebar-nav";
@@ -32,17 +32,22 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   }
 
   const isOps = profile.role === "ops_admin";
-  const orgs = isOps ? await getAccessibleOrgs() : [];
+  const kind = accountKind(profile);
+  // Staff switch between CUSTOMER accounts; their own staff organisation isn't one.
+  const orgs = isOps ? (await getAccessibleOrgs()).filter((o) => o.id !== profile.orgId) : [];
   const activeOrgId = await getActiveOrgId();
 
-  // Real badge counts (no fabricated numbers): the live fitment queue, and the ops needs-a-human queue.
-  const orders = listAllOrders();
+  // Real badge counts (no fabricated numbers), scoped to what this user can see: staff see every
+  // account's fitment queue; a business sees its own. Individuals have no queue.
+  const orders = isOps ? listAllOrders() : listOrdersForOrg(profile.orgId);
   const badges: Record<string, number> = {
     fitment: orders.filter((o) => FITMENT_QUEUE.includes(o.status as OrderStatus)).length,
   };
   if (isOps) {
     badges.ops = needsHumanRuns(listAllAgentRuns()).length + needsHumanEvents(listAllEvents()).length;
   }
+  const accountChip =
+    kind === "staff" ? "Easy Logi staff" : kind === "business" ? `Business · ${profile.orgName ?? ""}` : "Personal account";
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -54,16 +59,14 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           </Link>
         </div>
         <div className="flex-1 overflow-y-auto px-3 py-2">
-          <SidebarNav isOps={isOps} badges={badges} />
+          <SidebarNav kind={kind} badges={badges} />
         </div>
         <div className="border-t border-ink-2 px-5 py-4">
           <p className="truncate text-sm font-medium text-white">{profile.fullName ?? profile.email}</p>
           <p className="truncate text-xs text-on-ink-muted">{profile.email}</p>
-          {isOps && (
-            <span className="mt-2 inline-flex rounded-full bg-ink-2 px-2.5 py-0.5 text-xs font-medium text-on-ink-muted">
-              Ops admin
-            </span>
-          )}
+          <span className="mt-2 inline-flex max-w-full truncate rounded-full bg-ink-2 px-2.5 py-0.5 text-xs font-medium text-on-ink-muted">
+            {accountChip}
+          </span>
         </div>
       </aside>
 
@@ -73,7 +76,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <Link href="/dashboard" className="md:hidden" aria-label="Easy Logi — dashboard">
             <Logo size={24} variant="dark" />
           </Link>
-          <div className="hidden md:block" />
+          <p className="hidden text-sm text-muted-foreground md:block">{accountChip}</p>
           <div className="flex items-center gap-3">
             {isOps && orgs.length > 0 && <OrgSwitcher orgs={orgs} activeOrgId={activeOrgId} />}
             <form action="/auth/signout" method="post">
@@ -86,7 +89,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
         {/* Nav — mobile (Ink strip) */}
         <div className="bg-ink px-2 py-2 md:hidden print:hidden">
-          <SidebarNav isOps={isOps} orientation="horizontal" badges={badges} />
+          <SidebarNav kind={kind} orientation="horizontal" badges={badges} />
         </div>
 
         <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 md:px-8">{children}</main>

@@ -12,10 +12,27 @@ import type { Database } from "@easy-logi/shared";
 
 export const MOCK_SESSION_COOKIE = "el_mock_session";
 
+import {
+  INDIVIDUAL_ORG_ID,
+  STAFF_ORG_ID,
+  DEMO_USER_ID,
+  DEMO_USER_EMAIL,
+  BUSINESS_USER_ID,
+  INDIVIDUAL_USER_ID,
+} from "./demo-logins";
+
+export {
+  INDIVIDUAL_ORG_ID,
+  STAFF_ORG_ID,
+  DEMO_USER_ID,
+  DEMO_USER_EMAIL,
+  BUSINESS_USER_ID,
+  INDIVIDUAL_USER_ID,
+  DEMO_LOGINS,
+} from "./demo-logins";
+
 export const DEMO_ORG_ID = "00000000-0000-0000-0000-0000000000a1";
 const SECOND_ORG_ID = "00000000-0000-0000-0000-0000000000a2";
-export const DEMO_USER_ID = "00000000-0000-0000-0000-000000000011";
-export const DEMO_USER_EMAIL = "demo@easylogi.local";
 
 type Row = Record<string, unknown>;
 
@@ -38,6 +55,8 @@ interface MockStore {
   ingestion_batches: Row[];
   ingestion_rows: Row[];
   quotes: Row[];
+  // --- documents (b2b / individual) ---
+  order_documents: Row[];
 }
 
 /** Typed shapes for the fitment-engine tables the pipeline reads (see lib/fitment). */
@@ -119,6 +138,25 @@ function seed(): MockStore {
       created_at: iso(14),
       updated_at: iso(2),
     },
+    // --- an individual's own orders (personal account) ---
+    {
+      id: "33333333-3333-3333-3333-333333333301",
+      org_id: INDIVIDUAL_ORG_ID,
+      reference: "EL-261020-PB01",
+      status: "quoted",
+      summary: "Front brake pads — VW Polo Vivo 2017 (my own car)",
+      created_at: iso(6),
+      updated_at: iso(1),
+    },
+    {
+      id: "33333333-3333-3333-3333-333333333302",
+      org_id: INDIVIDUAL_ORG_ID,
+      reference: "EL-261012-PB02",
+      status: "delivered",
+      summary: "Headlamp (left) — Toyota Corolla 2014",
+      created_at: iso(14),
+      updated_at: iso(1),
+    },
   ];
 
   const order_status_changes: Row[] = [
@@ -156,16 +194,32 @@ function seed(): MockStore {
 
   return {
     organisations: [
-      { id: DEMO_ORG_ID, name: "Demo Importers (SZ)" },
-      { id: SECOND_ORG_ID, name: "Mbabane Motors (ZA)" },
+      { id: DEMO_ORG_ID, name: "Swazi Parts Co (Pty) Ltd", country: "SZ", account_type: "business" },
+      { id: SECOND_ORG_ID, name: "Mbabane Motors (ZA)", country: "ZA", account_type: "business" },
+      { id: INDIVIDUAL_ORG_ID, name: "Thandi Dlamini", country: "ZA", account_type: "individual" },
+      { id: STAFF_ORG_ID, name: "Easy Logi (staff)", country: "SZ", account_type: "business" },
     ],
     users: [
       {
         id: DEMO_USER_ID,
-        org_id: DEMO_ORG_ID,
+        org_id: STAFF_ORG_ID,
         email: DEMO_USER_EMAIL,
         full_name: "Demo Ops Admin",
         role: "ops_admin",
+      },
+      {
+        id: BUSINESS_USER_ID,
+        org_id: DEMO_ORG_ID,
+        email: "sipho@swaziparts.local",
+        full_name: "Sipho Nkosi",
+        role: "importer_admin",
+      },
+      {
+        id: INDIVIDUAL_USER_ID,
+        org_id: INDIVIDUAL_ORG_ID,
+        email: "thandi@example.local",
+        full_name: "Thandi Dlamini",
+        role: "buyer",
       },
     ],
     orders,
@@ -182,6 +236,7 @@ function seed(): MockStore {
     ingestion_batches: [],
     ingestion_rows: [],
     quotes: [],
+    order_documents: [],
   };
 }
 
@@ -343,6 +398,44 @@ interface Filter {
   val: unknown;
 }
 
+/** Row-visibility predicate emulating Postgres RLS (`can_access_org(org_id)`) for one session. */
+type Scope = (table: keyof MockStore, row: Row) => boolean;
+
+/**
+ * Build the RLS stand-in for a signed-in user. Ops admins see everything (as `is_ops_admin()`
+ * does in the real policies); business and individual users only see rows of their own
+ * organisation. Reference tables (catalogue, vehicles…) stay readable by everyone signed in.
+ * Returns null (no scoping) when there is no session or the user is staff.
+ */
+export function scopeForUser(userId: string | null): Scope | null {
+  if (!userId) return null;
+  const user = store().users.find((u) => u.id === userId);
+  if (!user || user.role === "ops_admin") return null;
+  const orgId = user.org_id;
+  return (table, row) => {
+    switch (table) {
+      case "orders":
+      case "events":
+      case "requests":
+      case "order_documents":
+      case "magic_link_tokens":
+        return row.org_id === orgId;
+      case "order_status_changes":
+      case "order_lines":
+      case "quotes": {
+        const order = store().orders.find((o) => o.id === row.order_id);
+        return !!order && order.org_id === orgId;
+      }
+      case "organisations":
+        return row.id === orgId;
+      case "users":
+        return row.org_id === orgId;
+      default:
+        return true;
+    }
+  };
+}
+
 /** Minimal PostgREST-style query builder over an in-memory table, awaitable via `then`. */
 class MockQuery implements PromiseLike<QueryResult> {
   private filters: Filter[] = [];
@@ -352,7 +445,10 @@ class MockQuery implements PromiseLike<QueryResult> {
   private insertRows: Row[] = [];
   private cardinality: "many" | "maybeSingle" | "single" = "many";
 
-  constructor(private readonly table: keyof MockStore) {}
+  constructor(
+    private readonly table: keyof MockStore,
+    private readonly scope: Scope | null = null,
+  ) {}
 
   select(_cols?: string): this {
     // Column projection is ignored: returning full rows is harmless for this console.
@@ -394,6 +490,10 @@ class MockQuery implements PromiseLike<QueryResult> {
     const table = store()[this.table];
 
     if (this.mode === "insert") {
+      // RLS `with check`: a scoped user may only insert rows into their own organisation.
+      if (this.scope && this.insertRows.some((row) => !this.scope!(this.table, row))) {
+        return { data: null, error: { message: "new row violates row-level security policy" } };
+      }
       const now = new Date().toISOString();
       const inserted = this.insertRows.map((row) => {
         const withDefaults: Row = {
@@ -408,7 +508,9 @@ class MockQuery implements PromiseLike<QueryResult> {
       return this.shape(inserted);
     }
 
-    let rows = table.filter((r) => this.filters.every((f) => r[f.col] === f.val));
+    let rows = table.filter(
+      (r) => (!this.scope || this.scope(this.table, r)) && this.filters.every((f) => r[f.col] === f.val),
+    );
     if (this.orderBy) {
       const { col, ascending } = this.orderBy;
       rows = [...rows].sort((a, b) => {
@@ -442,14 +544,16 @@ class MockQuery implements PromiseLike<QueryResult> {
   }
 }
 
-function changeOrderStatus(args: Record<string, unknown>): QueryResult {
+function changeOrderStatus(args: Record<string, unknown>, scope: Scope | null): QueryResult {
   const orderId = args.p_order_id as string;
   const to = args.p_to as string;
   const role = args.p_role as string;
   const note = (args.p_note as string | null) ?? null;
 
   const order = store().orders.find((o) => o.id === orderId);
-  if (!order) return { data: null, error: { message: "Order not found." } };
+  if (!order || (scope && !scope("orders", order))) {
+    return { data: null, error: { message: "Order not found." } };
+  }
 
   const from = order.status as string;
   const now = new Date().toISOString();
@@ -497,10 +601,10 @@ export function createMockClient(session: MockSession): SupabaseClient<Database>
       },
     },
     from(table: keyof MockStore) {
-      return new MockQuery(table);
+      return new MockQuery(table, scopeForUser(session.getUserId()));
     },
     async rpc(fn: string, args: Record<string, unknown>) {
-      if (fn === "change_order_status") return changeOrderStatus(args);
+      if (fn === "change_order_status") return changeOrderStatus(args, scopeForUser(session.getUserId()));
       return { data: null, error: { message: `Unknown RPC: ${fn}` } };
     },
   };
@@ -821,4 +925,72 @@ export function updateIngestionRowStatus(rowId: string, status: string): void {
 export function markIngestionBatchPublished(batchId: string): void {
   const b = store().ingestion_batches.find((x) => x.id === batchId);
   if (b) b.status = "published";
+}
+
+// ---------------------------------------------------------------------------
+// Uploaded documents (b2b / individual). Order documents have order_id set; account documents
+// (ID, proof of address, customs-number letter…) have order_id null and satisfy every order of
+// that organisation. In mock mode the bytes are kept in memory (base64) so they can be
+// downloaded again; the real backend stores them in Supabase Storage.
+// ---------------------------------------------------------------------------
+
+export type OrderDocumentRow = {
+  id: string;
+  org_id: string;
+  order_id: string | null;
+  doc_key: string;
+  label: string;
+  filename: string;
+  mime_type: string;
+  size_bytes: number;
+  status: "received" | "passed" | "warned" | "failed";
+  uploaded_by: string | null;
+  created_at: string;
+  data_base64: string;
+};
+
+export function addOrderDocument(
+  input: Omit<OrderDocumentRow, "id" | "created_at" | "status">,
+): OrderDocumentRow {
+  const row: OrderDocumentRow = {
+    ...input,
+    id: crypto.randomUUID(),
+    status: "received",
+    created_at: new Date().toISOString(),
+  };
+  store().order_documents.push(row);
+  return row;
+}
+
+/** Documents that count for an order: its own uploads plus the organisation's account documents. */
+export function listDocumentsForOrder(orgId: string, orderId: string): OrderDocumentRow[] {
+  return (store().order_documents as OrderDocumentRow[]).filter(
+    (d) => d.org_id === orgId && (d.order_id === orderId || d.order_id === null),
+  );
+}
+
+export function listAccountDocuments(orgId: string): OrderDocumentRow[] {
+  return (store().order_documents as OrderDocumentRow[]).filter(
+    (d) => d.org_id === orgId && d.order_id === null,
+  );
+}
+
+export function getOrderDocument(id: string): OrderDocumentRow | undefined {
+  return (store().order_documents as OrderDocumentRow[]).find((d) => d.id === id);
+}
+
+export type OrganisationRow = {
+  id: string;
+  name: string;
+  country: string;
+  account_type: "business" | "individual";
+};
+
+export function getOrganisation(id: string): OrganisationRow | undefined {
+  return (store().organisations as OrganisationRow[]).find((o) => o.id === id);
+}
+
+/** Orders for one organisation (non-staff views use this instead of listAllOrders). */
+export function listOrdersForOrg(orgId: string): OrderRow[] {
+  return listAllOrders().filter((o) => o.org_id === orgId);
 }

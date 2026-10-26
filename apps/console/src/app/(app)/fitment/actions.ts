@@ -4,7 +4,10 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { transition, TransitionError, type OrderStatus } from "@easy-logi/shared";
 import { createClient } from "@/lib/supabase/server";
-import { getCurrentProfile, toConsoleRole } from "@/lib/auth";
+import { createStatusClient } from "@/lib/supabase/admin";
+import { accountKind, getCurrentProfile, toConsoleRole } from "@/lib/auth";
+import { cookies } from "next/headers";
+import { ACTIVE_ORG_COOKIE } from "@/lib/org";
 import {
   addOrderLine,
   addRequest,
@@ -22,8 +25,15 @@ export interface FindState {
   ts?: number;
 }
 
+/** Fitment is a business / staff tool — the page is guarded, and so is every action behind it. */
+async function fitmentAllowed(): Promise<boolean> {
+  const profile = await getCurrentProfile();
+  return !!profile && accountKind(profile) !== "individual";
+}
+
 /** Run the fitment pipeline on a buyer's free-text request and return the result for display. */
 export async function findParts(_prev: FindState, formData: FormData): Promise<FindState> {
+  if (!(await fitmentAllowed())) return { result: null, error: "Fitment is for business accounts.", ts: Date.now() };
   const request = ((formData.get("request") as string | null) ?? "").trim();
   if (!request) return { result: null, error: "Describe the part you need.", ts: Date.now() };
   if (request.length > 500)
@@ -35,6 +45,7 @@ export async function findParts(_prev: FindState, formData: FormData): Promise<F
 
 /** Read a part photo (or a sample label) and run the fitment pipeline from what it reads. */
 export async function readPhoto(_prev: FindState, formData: FormData): Promise<FindState> {
+  if (!(await fitmentAllowed())) return { result: null, error: "Fitment is for business accounts.", ts: Date.now() };
   const sampleId = ((formData.get("sampleId") as string | null) ?? "").trim() || null;
   const file = formData.get("photo");
   let image: ImageInput | null = null;
@@ -77,6 +88,7 @@ function parseRuns(raw: string): AgentRunSummary[] {
 export async function confirmFit(formData: FormData): Promise<void> {
   const profile = await getCurrentProfile();
   if (!profile) redirect("/login");
+  if (accountKind(profile) === "individual") redirect("/dashboard");
 
   const partId = ((formData.get("partId") as string | null) ?? "").trim();
   const partNumber = ((formData.get("partNumber") as string | null) ?? "").trim();
@@ -86,7 +98,13 @@ export async function confirmFit(formData: FormData): Promise<void> {
   const runs = parseRuns((formData.get("runs") as string | null) ?? "[]");
   if (!partNumber) redirect("/fitment");
 
-  const orgId = profile.orgId;
+  // Staff confirm a fit on behalf of the customer account picked in the org switcher.
+  let orgId = profile.orgId;
+  if (profile.role === "ops_admin") {
+    const selected = (await cookies()).get(ACTIVE_ORG_COOKIE)?.value;
+    if (!selected || selected === profile.orgId) redirect("/fitment?needOrg=1");
+    orgId = selected;
+  }
   const role = profile.role;
   const consoleRole = toConsoleRole(role);
   const supabase = await createClient();
@@ -124,6 +142,7 @@ export async function confirmFit(formData: FormData): Promise<void> {
     ["requested", "fitment_in_progress", "Fitment started from buyer request."],
     ["fitment_in_progress", "matched", `Part matched & approved: ${partNumber}.`],
   ];
+  const statusClient = await createStatusClient();
   for (const [from, to, note] of steps) {
     try {
       transition(from, to, consoleRole);
@@ -131,11 +150,12 @@ export async function confirmFit(formData: FormData): Promise<void> {
       if (err instanceof TransitionError) break;
       throw err;
     }
-    const { error: rpcError } = await supabase.rpc("change_order_status", {
+    const { error: rpcError } = await statusClient.rpc("change_order_status", {
       p_order_id: orderId,
       p_to: to,
       p_role: role,
       p_note: note,
+      p_actor: profile.id,
     });
     if (rpcError) break;
   }

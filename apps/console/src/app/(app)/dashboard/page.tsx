@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { Search, ClipboardList, TriangleAlert } from "lucide-react";
 import type { OrderStatus } from "@easy-logi/shared";
-import { getCurrentProfile } from "@/lib/auth";
-import { listAllOrders, listAllAgentRuns, listAllEvents } from "@/lib/mock/backend";
+import { accountKind, getCurrentProfile } from "@/lib/auth";
+import { listAllOrders, listAllAgentRuns, listAllEvents, listOrdersForOrg } from "@/lib/mock/backend";
 import { needsHumanRuns, needsHumanEvents } from "@/lib/ops/health";
 import { StatusPill } from "@easy-logi/ui";
 import { ORDER_PHASES, isOutOfBand } from "@/lib/status";
@@ -27,8 +27,10 @@ function Stat({ label, value, href }: { label: string; value: number | string; h
 export default async function DashboardPage() {
   const profile = await getCurrentProfile();
   const isOps = profile?.role === "ops_admin";
+  const isIndividual = profile ? accountKind(profile) === "individual" : false;
 
-  const orders = listAllOrders();
+  // Staff see every account; a business or an individual sees only their own orders.
+  const orders = isOps ? listAllOrders() : profile ? listOrdersForOrg(profile.orgId) : [];
   const inProgress = orders.filter((o) => o.status !== "closed" && o.status !== "cancelled").length;
   const delivered = orders.filter((o) =>
     ["delivered", "fit_confirmed", "closed"].includes(o.status),
@@ -52,29 +54,49 @@ export default async function DashboardPage() {
           {greeting()}, {firstName(profile?.fullName, profile?.email)}
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Turn a buyer&apos;s request into the right part, landed and cleared. Start with a part to find.
+          {isIndividual
+            ? "Your parts orders, and the documents each step needs from you."
+            : "Turn a buyer's request into the right part, landed and cleared. Start with a part to find."}
         </p>
       </div>
 
       {/* Primary action — the product's front door */}
-      <Card className="border-primary/30 bg-primary/5">
-        <CardContent className="flex flex-col gap-4 py-6 sm:flex-row sm:items-center sm:justify-between">
-          <div className="max-w-xl space-y-1">
-            <h2 className="font-display text-xl font-semibold">Find a part</h2>
-            <p className="text-sm text-muted-foreground">
-              Describe it or read it off a photo. The fitment engine matches the exact part number for
-              the buyer&apos;s vehicle — then you confirm and the order begins.
-            </p>
-          </div>
-          <Link href="/fitment" className={cn(buttonVariants({ size: "lg" }), "shrink-0")}>
-            <Search className="mr-2 h-4 w-4" />
-            Find a part
-          </Link>
-        </CardContent>
-      </Card>
+      {isIndividual ? (
+        <Card className="border-primary/30 bg-primary/5">
+          <CardContent className="flex flex-col gap-4 py-6 sm:flex-row sm:items-center sm:justify-between">
+            <div className="max-w-xl space-y-1">
+              <h2 className="font-display text-xl font-semibold">Need a part for your vehicle?</h2>
+              <p className="text-sm text-muted-foreground">
+                Tell us the part and your vehicle. Easy Logi finds the exact part, sources it, ships it and clears
+                customs — you upload your ID once and your payment proofs as you go.
+              </p>
+            </div>
+            <Link href="/orders" className={cn(buttonVariants({ size: "lg" }), "shrink-0")}>
+              <Search className="mr-2 h-4 w-4" aria-hidden="true" />
+              Request a part
+            </Link>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card className="border-primary/30 bg-primary/5">
+          <CardContent className="flex flex-col gap-4 py-6 sm:flex-row sm:items-center sm:justify-between">
+            <div className="max-w-xl space-y-1">
+              <h2 className="font-display text-xl font-semibold">Find a part</h2>
+              <p className="text-sm text-muted-foreground">
+                Describe it or read it off a photo. The fitment engine matches the exact part number for
+                the buyer&apos;s vehicle — then you confirm and the order begins.
+              </p>
+            </div>
+            <Link href="/fitment" className={cn(buttonVariants({ size: "lg" }), "shrink-0")}>
+              <Search className="mr-2 h-4 w-4" aria-hidden="true" />
+              Find a part
+            </Link>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat label="Orders in progress" value={inProgress} href="/orders" />
+        <Stat label={isIndividual ? "My orders in progress" : "Orders in progress"} value={inProgress} href="/orders" />
         <Stat label="Delivered" value={delivered} href="/orders" />
         <Stat label="Needs attention" value={attention} href="/orders" />
         {isOps && <Stat label="Needs a human" value={needsHuman} href="/ops" />}

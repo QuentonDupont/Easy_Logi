@@ -33,8 +33,10 @@ export type OrderStatusEnum =
   | "disputed"
   | "cancelled";
 
-export type UserRoleEnum = "ops_admin" | "importer_admin" | "importer_member";
+export type UserRoleEnum = "ops_admin" | "importer_admin" | "importer_member" | "buyer";
 export type CountryEnum = "SZ" | "ZA";
+/** A business (importer / workshop / fleet) or an individual buying for themselves. */
+export type AccountTypeEnum = "business" | "individual";
 
 type Timestamps = { created_at: string; updated_at: string };
 
@@ -42,11 +44,12 @@ export interface Database {
   public: {
     Tables: {
       organisations: {
-        Row: { id: string; name: string; country: CountryEnum } & Timestamps;
+        Row: { id: string; name: string; country: CountryEnum; account_type: AccountTypeEnum } & Timestamps;
         Insert: {
           id?: string;
           name: string;
           country: CountryEnum;
+          account_type?: AccountTypeEnum;
           created_at?: string;
           updated_at?: string;
         };
@@ -182,13 +185,15 @@ export interface Database {
       };
       queue_delete: { Args: { queue_name: string; msg_id: number }; Returns: boolean };
       queue_archive: { Args: { queue_name: string; msg_id: number }; Returns: boolean };
-      // The only path allowed to change orders.status (migration 20261011090008).
+      // The only path allowed to change orders.status (migrations 20261011090008, 20261026090002).
+      // service_role only — call it through lib/supabase/admin.ts after the status machine + gate.
       change_order_status: {
         Args: {
           p_order_id: string;
           p_to: OrderStatusEnum;
           p_role: UserRoleEnum;
           p_note: string | null;
+          p_actor?: string | null;
         };
         Returns: undefined;
       };

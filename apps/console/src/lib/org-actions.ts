@@ -33,5 +33,5 @@ export async function setActiveOrg(formData: FormData): Promise<void> {
       maxAge: 60 * 60 * 24 * 30,
     });
   }
-  revalidatePath("/orders");
+  revalidatePath("/", "layout");
 }
